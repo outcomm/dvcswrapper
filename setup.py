@@ -23,6 +23,7 @@ setup(name = 'dvcs',
     download_url = "https://github.com/outcomm/dvcswrapper",
     classifiers = CLASSIFIERS,
     keywords = KEYWORDS,
-    zip_safe = True,
+    zip_safe = False,
+    include_package_data = True,
     install_requires = ['fabric<1.4.0','mercurial>=2.1.1',]
 )
