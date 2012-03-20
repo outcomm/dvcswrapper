@@ -118,8 +118,8 @@ class HgTests(TestCase):
             f.write('\nfap second line')
         hg.commit('new branch test')
 
-        hg.update(branch='default',  clean=False) #back to default
-        hg.merge(branch='test',)
+        hg.update(branch='default', clean=False) #back to default
+        hg.merge(branch='test', )
 
         self.assertEqual(2, len(open(new_file, "r").readlines()))
 
@@ -277,31 +277,30 @@ class HgTests(TestCase):
 
     def test_files(self):
         hg = self._mk_local_repo()
-        expects = [('43ada45cd8365e0aef92b9a17fc581600f604f3a', ['one']),
-            ('bc841aa8bbb1cf6519670192857aeab484a48b56', ['buhwawa']),
-            ('75465a736d415d8b3dbe64982635114fc39a6d37', []),
-            ('b26fba69aa7b0378bee2a5386f16c14b0f697c18', []),
+        expects = [('e0059853920b7e0eafba0fcac22612b07045a359', []),
             ('eda6840416571d21bcf3d37e9d519fafc3e7c31d', ['closed', 'meh']),
-            ('e0059853920b7e0eafba0fcac22612b07045a359', []),
-            ('690216eee7b291ac9dca0164d660576bdba51d47', ['one'])]
+            ('b26fba69aa7b0378bee2a5386f16c14b0f697c18', []),
+            ('75465a736d415d8b3dbe64982635114fc39a6d37', []),
+            ('bc841aa8bbb1cf6519670192857aeab484a48b56', ['buhwawa'])]
+
         self.assertEquals(expects, hg.get_changed_files(1, 5))
 
     def test_head(self):
         hg = self._mk_local_repo()
-#        expects = {'author': 'Jan Florian <starenka0@gmail.com>',
-#                   'branch': 'default',
-#                   'message': '',
-#                   'node': '43ada45cd8365e0aef92b9a17fc581600f604f3a',
-#                   'rev': '6',
-#                   'short': '43ada45cd836'
-#        }
-#        self.assertEquals(expects, hg.get_head())
+        #        expects = {'author': 'Jan Florian <starenka0@gmail.com>',
+        #                   'branch': 'default',
+        #                   'message': '',
+        #                   'node': '43ada45cd8365e0aef92b9a17fc581600f604f3a',
+        #                   'rev': '6',
+        #                   'short': '43ada45cd836'
+        #        }
+        #        self.assertEquals(expects, hg.get_head())
 
         expects = {'author': 'Jan Florian <starenka0@gmail.com>',
-           'branch': 'closed',
-           'message': '',
-           'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18',
-           'rev': '3',
-           'short': 'b26fba69aa7b'
+                   'branch': 'closed',
+                   'message': '',
+                   'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18',
+                   'rev': '3',
+                   'short': 'b26fba69aa7b'
         }
         self.assertEquals(expects, hg.get_head(branch='closed'))
