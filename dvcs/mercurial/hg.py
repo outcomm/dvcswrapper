@@ -60,7 +60,7 @@ class Hg(DVCSWrapper):
         return self._command('commit', *args)
 
 
-    def merge(self, branch=None, revision=None):
+    def merge(self, branch=None, revision=None, **kwargs):
         if revision and branch:
             raise DVCSException('If revision is specified, branch cannot be set.')
         args = ['%s' % branch if branch else '',
@@ -70,6 +70,7 @@ class Hg(DVCSWrapper):
                 "--config merge-tools.e.executable=%s" % os.path.join(DIR_SCRIPT, 'mergetool.py'),
                 "--config merge-tools.e.premerge=True",
                 "--noninteractive",
+                "--preview" if kwargs.get('preview', False) else '',
                 ]
 
         return self._command('merge', *args)
@@ -249,7 +250,8 @@ class Hg(DVCSWrapper):
 
     def get_changed_files(self, start_node, end_node):
         try:
-            out = self._command('log', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'files_changed'))
+            out = self._command('log', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'files_changed'),
+                '--rev %s:%s' % (start_node or '', end_node))
             changed = []
             for one in out.splitlines():
                 line = one.split(':')

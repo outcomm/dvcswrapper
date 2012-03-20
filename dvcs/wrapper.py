@@ -38,7 +38,7 @@ class DVCSWrapper(object):
     def commit(self, message, user=None, addremove=True, files=None):
         raise NotImplementedError
 
-    def merge(self, branch='default', revision=None):
+    def merge(self, branch=None, revision=None, **kwargs):
         raise NotImplementedError
 
     def push(self, **kwargs):

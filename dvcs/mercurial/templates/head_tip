@@ -1,0 +1,1 @@
+changeset = '{branch}\t\t{rev}\t\t{node|short}\t\t{node}\t\t{author}\t\t{desc}'
