@@ -14,7 +14,6 @@ CURR_DIR = os.path.dirname(os.path.realpath(__file__))
 
 REMOTE_REPO = os.path.join(CURR_DIR, 'hgtestrepo')
 
-
 LOCAL_REPO = os.path.join(TMP, 'hgtests', 'local_clone')
 DUMMY_REPO = os.path.join(TMP, 'hgtests', 'dummy')
 DUMMY_REPO_COPY = DUMMY_REPO + '_copy'
@@ -35,6 +34,8 @@ def rmrf(path):
 class HgTests(TestCase):
     @classmethod
     def setUpClass(cls):
+        rmrf(os.path.join(TMP, 'hgtests'))
+        os.makedirs(os.path.join(TMP, 'hgtests'))
         rmrf(LOCAL_REPO)
         DVCSWrapper(LOCAL_REPO).clone(REMOTE_REPO) #local clone
 
@@ -128,7 +129,6 @@ class HgTests(TestCase):
         hg.branch('test')
 
         def conflict_file(name):
-
             with open(name, "w") as f:
                 f.write('fap fap fap')
             hg.commit('new test')
@@ -285,3 +285,23 @@ class HgTests(TestCase):
             ('e0059853920b7e0eafba0fcac22612b07045a359', []),
             ('690216eee7b291ac9dca0164d660576bdba51d47', ['one'])]
         self.assertEquals(expects, hg.get_changed_files(1, 5))
+
+    def test_head(self):
+        hg = self._mk_local_repo()
+#        expects = {'author': 'Jan Florian <starenka0@gmail.com>',
+#                   'branch': 'default',
+#                   'message': '',
+#                   'node': '43ada45cd8365e0aef92b9a17fc581600f604f3a',
+#                   'rev': '6',
+#                   'short': '43ada45cd836'
+#        }
+#        self.assertEquals(expects, hg.get_head())
+
+        expects = {'author': 'Jan Florian <starenka0@gmail.com>',
+           'branch': 'closed',
+           'message': '',
+           'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18',
+           'rev': '3',
+           'short': 'b26fba69aa7b'
+        }
+        self.assertEquals(expects, hg.get_head(branch='closed'))

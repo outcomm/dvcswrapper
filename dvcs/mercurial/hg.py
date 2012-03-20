@@ -18,6 +18,8 @@ class Hg(DVCSWrapper):
     """
     RE_PUSH_PULL_OUT = re.compile(
         r'added (?P<changesets>\d+) changesets with (?P<changes>\d+) changes to (?P<files>\d+) files')
+    RE_HEAD = re.compile(
+        r'(?P<branch>.*?)\t\t(?P<rev>.*?)\t\t(?P<short>.*?)\t\t(?P<node>.*?)\t\t(?P<author>.*?)\t\t(?P<message>.*?)')
     RE_SPLIT_LOG = re.compile(r'\t{2}')
     NO_PUSH_PULL = {'files': 0, 'changesets': 0, 'changes': 0}
 
@@ -252,7 +254,20 @@ class Hg(DVCSWrapper):
             for one in out.splitlines():
                 line = one.split(':')
                 node, files = line[0], ':'.join(line[1:])
-                changed.append((node,[f for f in re.split(self.RE_SPLIT_LOG, files) if f]))
+                changed.append((node, [f for f in re.split(self.RE_SPLIT_LOG, files) if f]))
             return changed
         except DVCSException:
             raise
+
+    def get_head(self, branch=None):
+        args = ['log', '-l1', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'head_tip')]
+        if branch:
+            args.append('-b %s' % branch)
+
+        try:
+            out = self._command(*args)
+        except DVCSException:
+            raise
+
+        search = re.search(self.RE_HEAD, out)
+        return search.groupdict()

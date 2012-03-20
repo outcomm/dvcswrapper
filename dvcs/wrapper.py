@@ -118,3 +118,9 @@ class DVCSWrapper(object):
         returns [(node,[removed,added,modified])
         """
         raise NotImplemented
+
+    def get_head(self, branch=None):
+        """
+        returns dict(node,rev,node_short,message,author,branch,)
+        """
+        raise NotImplemented
