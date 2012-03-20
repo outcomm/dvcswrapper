@@ -8,20 +8,31 @@
     "--config merge-tools.e.premerge=True",
 """
 
+from tempfile import mkstemp
 import sys
-from utils import read_file
+from dvcs.mercurial.utils import read_file
+
 
 try:
     import simplejson as json
 except ImportError:
     import json
 
-base = read_file(sys.argv[1])
-local = read_file(sys.argv[2])
-other = read_file(sys.argv[3])
+base = sys.argv[1]
+local = sys.argv[2]
+other = sys.argv[3]
 tar = sys.argv[4]
 
-out = {'base': base, 'local': local, 'other': other, 'tar': tar}
+def copy_to_my_tmp(file_name):
+    f, name = mkstemp()
+    with open(name,'w') as tmp:
+        tmp.write(read_file(file_name))
+    return name
+
+out = {'base': copy_to_my_tmp(base),
+       'local': copy_to_my_tmp(local),
+       'other': copy_to_my_tmp(other),
+       'tar': tar}
 
 out = json.dumps(out)
 print out

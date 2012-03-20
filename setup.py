@@ -1,6 +1,22 @@
 #!/usr/bin/env python
 from setuptools import setup, find_packages
+from setuptools.command.install import install as _install
+import os
+import stat
 
+EXECUTABLE_FILES=('dvcs/mercurial/mergetool.py', 'dvcs/mercurial/difftool.py')
+
+class install(_install):
+    def run(self):
+        _install.run(self)
+        for filename in open(self.record,'r'):
+            for ef in EXECUTABLE_FILES:
+                if filename.strip().endswith(ef):
+                    os.chmod(filename.strip(), stat.S_IRWXU|stat.S_IRWXG|stat.S_IROTH) #executable by owner, group, readable by others
+
+            
+
+    
 CLASSIFIERS = [
     'Development Status :: 5 - Production/Stable',
     'Intended Audience :: Developers',
@@ -23,6 +39,9 @@ setup(name = 'dvcs',
     download_url = "https://github.com/outcomm/dvcswrapper",
     classifiers = CLASSIFIERS,
     keywords = KEYWORDS,
-    zip_safe = True,
-    install_requires = ['fabric<1.4.0','mercurial>=2.1.1',]
+    zip_safe = False,
+    include_package_data = True,
+    install_requires = ['fabric<1.4.0','mercurial>=2.1.1',],
+    cmdclass={'install': install},
 )
+

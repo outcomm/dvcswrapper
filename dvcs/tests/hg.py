@@ -1,11 +1,19 @@
 import os, tempfile, shutil, datetime
 from unittest import TestCase
+import re
 from ..wrapper import DVCSException, DVCSWrapper
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 TMP = tempfile.gettempdir()
+
 CURR_DIR = os.path.dirname(os.path.realpath(__file__))
 
 REMOTE_REPO = os.path.join(CURR_DIR, 'hgtestrepo')
+
 
 LOCAL_REPO = os.path.join(TMP, 'hgtests', 'local_clone')
 DUMMY_REPO = os.path.join(TMP, 'hgtests', 'dummy')
@@ -113,6 +121,43 @@ class HgTests(TestCase):
         hg.merge(branch='test')
 
         self.assertEqual(2, len(open(new_file, "r").readlines()))
+
+    def test_conflict_merge(self):
+        hg = self._mk_local_repo()
+
+        hg.branch('test')
+
+        def conflict_file(name):
+
+            with open(name, "w") as f:
+                f.write('fap fap fap')
+            hg.commit('new test')
+
+            hg.update(branch='default', clean=False) #back to default
+
+            with open(name, "w") as f:
+                f.write('second time')
+            hg.commit('new test')
+
+            hg.update(branch='test', clean=False) #back to default
+            with open(name, "w") as f:
+                f.write('lastafarae')
+            hg.commit('new trest')
+
+        conflict_file(os.path.join(DUMMY_REPO, TEST_FILE))
+        conflict_file(os.path.join(DUMMY_REPO, 'segundo_compai'))
+
+        hg.update(branch='default', clean=False)
+        merge = hg.merge(branch='test')
+        json_outputs = re.findall(r'\{"base".*\}', merge)
+        to_merge = []
+        for o in json_outputs:
+            merge = json.loads(o)
+            self.assertIsNotNone(merge)
+            self.assertIsNotNone(merge['base'])
+            self.assertIsNotNone(merge['local'])
+            self.assertIsNotNone(merge['other'])
+            self.assertIsNotNone(merge['tar'])
 
 
     def test_push_pull(self):
