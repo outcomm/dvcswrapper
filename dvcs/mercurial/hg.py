@@ -248,7 +248,8 @@ class Hg(DVCSWrapper):
 
     def get_changed_files(self, start_node, end_node):
         try:
-            out = self._command('log', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'files_changed'))
+            out = self._command('log', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'files_changed'),
+                '--rev %s:%s' % (start_node or '', end_node))
             changed = []
             for one in out.splitlines():
                 line = one.split(':')
