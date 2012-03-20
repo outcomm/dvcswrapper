@@ -100,7 +100,7 @@ class DVCSWrapper(object):
 
     def diff_html(self, path, identifier=None, **kwargs):
         """
-        returns unified diff
+        returns html diff
         """
         raise NotImplementedError
 
@@ -112,3 +112,9 @@ class DVCSWrapper(object):
 
     def get_new_changesets(self, branch=None):
         raise NotImplementedError
+
+    def get_changed_files(self, start_node, end_node):
+        """
+        returns [(node,[removed,added,modified])
+        """
+        raise NotImplemented

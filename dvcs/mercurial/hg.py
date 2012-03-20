@@ -9,7 +9,8 @@ try:
 except ImportError:
     import settings
 
-SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+DIR_SCRIPT = os.path.dirname(os.path.realpath(__file__))
+DIR_TEMPLATES = os.path.join(DIR_SCRIPT, 'templates')
 
 class Hg(DVCSWrapper):
     """
@@ -64,7 +65,7 @@ class Hg(DVCSWrapper):
                 '%s' % '--rev %s' % revision if revision else '',
                 "--config merge-tools.e.args='$base $local $other $output'",
                 "--config merge-tools.e.priority=1000",
-                "--config merge-tools.e.executable=%s" % os.path.join(SCRIPT_DIR, 'mergetool.py'),
+                "--config merge-tools.e.executable=%s" % os.path.join(DIR_SCRIPT, 'mergetool.py'),
                 "--config merge-tools.e.premerge=True",
                 "--noninteractive",
                 ]
@@ -147,8 +148,7 @@ class Hg(DVCSWrapper):
 
 
     def repo_log(self):
-        template = '{branch}\t\t{node}\t\t{node|short}\t\t{date|isodatesec}\t\t{author}\t\t{files}\t\t{rev}\t\t{desc}\n'
-        out = self._command('log', "--template='%s'" % template)
+        out = self._command('log', '--style="%s"' % os.path.join(DIR_TEMPLATES, 'log'))
 
         log = defaultdict(list)
         for one in out.splitlines():
@@ -161,7 +161,8 @@ class Hg(DVCSWrapper):
 
     def user_commits(self, user, limit=None, **kwargs):
         args = {'-u': user,
-                '--template': '"{branch}\t\t{node}\t\t{node|short}\t\t{date|isodatesec}\t\t{author}\t\t{files}\t\t{rev}\t\t{desc}\n"'}
+                '--style': '"%s"' % os.path.join(DIR_TEMPLATES, 'log')
+        }
         if limit:
             args.update({'-l': str(limit)})
         args.update(kwargs)
@@ -179,7 +180,7 @@ class Hg(DVCSWrapper):
     def branches(self, **kwargs):
         out = self._command('branches', '-c')
 
-        branches = {'active': [], 'inactive': [], 'closed': [], 'all':[]}
+        branches = {'active': [], 'inactive': [], 'closed': [], 'all': []}
         re_line = re.compile(r'\s+')
         for line in out.splitlines():
             line = re.split(re_line, line)
@@ -196,8 +197,7 @@ class Hg(DVCSWrapper):
         return branches
 
     def branch_revisions(self, branch, **kwargs):
-        template = '{node}\t\t{node|short}\t\t{date|isodatesec}\t\t{author}\t\t{files}\t\t{rev}\t\t{desc}\n'
-        out = self._command('log', '-b %s' % branch, "--template='%s'" % template)
+        out = self._command('log', '-b %s' % branch, '--style "%s"' % os.path.join(DIR_TEMPLATES, 'revs'))
         for one in out.splitlines():
             node, short, date, author, files, rev, mess = re.split(self.RE_SPLIT_LOG, one)
             yield dict(date=datetime.datetime.strptime(date[:-6], '%Y-%m-%d %H:%M:%S'), node=node, author=author,
@@ -215,7 +215,7 @@ class Hg(DVCSWrapper):
         if identifier:
             args.append('-r %s' % str(identifier))
         out = self._command(
-            '--config extensions.hgext.extdiff="" extdiff -p %s' % os.path.join(SCRIPT_DIR, 'difftool.py'), *args,
+            '--config extensions.hgext.extdiff="" extdiff -p %s' % os.path.join(DIR_SCRIPT, 'difftool.py'), *args,
             ignore_return_code=True) #@FIXME more sexy
         return out
 
@@ -232,8 +232,8 @@ class Hg(DVCSWrapper):
     def get_new_changesets(self, branch=None):
         revs = []
         try:
-            template = '{node}\t\t{date|isodatesec}\t\t{author}\t\t{desc}\n'
-            out = self._command('incoming', '--template="%s"' % template, '-b %s' % branch if branch else '')
+            out = self._command('incoming', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'new_changesets'),
+                '-b %s' % branch if branch else '')
             for one in out.splitlines()[2:]: #skip "comparing with" meh and "searching for changes"
                 node, date, author, mess = re.split(self.RE_SPLIT_LOG, one)
                 revs.append(
@@ -244,3 +244,16 @@ class Hg(DVCSWrapper):
                 raise
 
         return revs
+
+
+    def get_changed_files(self, start_node, end_node):
+        try:
+            out = self._command('log', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'files_changed'))
+            changed = []
+            for one in out.splitlines():
+                line = one.split(':')
+                node, files = line[0], ':'.join(line[1:])
+                changed.append((node,[f for f in re.split(self.RE_SPLIT_LOG, files) if f]))
+            return changed
+        except DVCSException:
+            raise
