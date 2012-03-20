@@ -274,3 +274,14 @@ class HgTests(TestCase):
         last = hg2.get_new_changesets()[-1]
         self.assertEquals(('Always look good. Always!', 'brogrammer'), (last['mess'], last['author']))
 
+
+    def test_files(self):
+        hg = self._mk_local_repo()
+        expects = [('43ada45cd8365e0aef92b9a17fc581600f604f3a', ['one']),
+            ('bc841aa8bbb1cf6519670192857aeab484a48b56', ['buhwawa']),
+            ('75465a736d415d8b3dbe64982635114fc39a6d37', []),
+            ('b26fba69aa7b0378bee2a5386f16c14b0f697c18', []),
+            ('eda6840416571d21bcf3d37e9d519fafc3e7c31d', ['closed', 'meh']),
+            ('e0059853920b7e0eafba0fcac22612b07045a359', []),
+            ('690216eee7b291ac9dca0164d660576bdba51d47', ['one'])]
+        self.assertEquals(expects, hg.get_changed_files(1, 5))

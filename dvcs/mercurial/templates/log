@@ -1,0 +1,1 @@
+changeset = "{branch}\t\t{node}\t\t{node|short}\t\t{date|isodatesec}\t\t{author}\t\t{files}\t\t{rev}\t\t{desc}\n"
