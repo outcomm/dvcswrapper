@@ -139,9 +139,9 @@ class Hg(DVCSWrapper):
 
     def log(self, identifier=None, limit=None, template=None, **kwargs):
         args = ['log']
-        if identifier: args.append(['-r', str(identifier)])
-        if limit: args.append(['-l', str(limit)])
-        if template: args.append(['--template', str(template)])
+        if identifier: args.extend(['-r', str(identifier)])
+        if limit: args.extend(['-l', str(limit)])
+        if template: args.extend(['--template', str(template)])
         for k, v in kwargs.items():
             args.extend([k, v])
         return self._command(*args)
@@ -244,7 +244,6 @@ class Hg(DVCSWrapper):
                 raise
 
         return revs
-
 
     def get_changed_files(self, start_node, end_node):
         try:
