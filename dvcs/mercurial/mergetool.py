@@ -10,7 +10,7 @@
 
 from tempfile import mkstemp
 import sys
-from dvcs.mercurial.utils import read_file
+from utils import read_file
 
 
 try:

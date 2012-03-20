@@ -117,8 +117,8 @@ class HgTests(TestCase):
             f.write('\nfap second line')
         hg.commit('new branch test')
 
-        hg.update(branch='default') #back to default
-        hg.merge(branch='test')
+        hg.update(branch='default',  clean=False) #back to default
+        hg.merge(branch='test',)
 
         self.assertEqual(2, len(open(new_file, "r").readlines()))
 

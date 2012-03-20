@@ -57,7 +57,7 @@ class Hg(DVCSWrapper):
         return self._command('commit', *args)
 
 
-    def merge(self, branch=None, revision=None):
+    def merge(self, branch=None, revision=None, **kwargs):
         if revision and branch:
             raise DVCSException('If revision is specified, branch cannot be set.')
         args = ['%s' % branch if branch else '',
@@ -67,6 +67,7 @@ class Hg(DVCSWrapper):
                 "--config merge-tools.e.executable=%s" % os.path.join(SCRIPT_DIR, 'mergetool.py'),
                 "--config merge-tools.e.premerge=True",
                 "--noninteractive",
+                "--preview" if kwargs.get('preview', False) else '',
                 ]
 
         return self._command('merge', *args)
