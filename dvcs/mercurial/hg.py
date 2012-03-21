@@ -145,18 +145,21 @@ class Hg(DVCSWrapper):
         return changes
 
 
-    def log(self, identifier=None, limit=None, template=None, **kwargs):
-        args = ['log']
+    def _log(self, identifier=None, limit=None, template=None, **kwargs):
+        args = []
         if identifier: args.extend(['-r', str(identifier)])
         if limit: args.extend(['-l', str(limit)])
         if template: args.extend(['--template', str(template)])
         for k, v in kwargs.items():
             args.extend([k, v])
-        return self._command(*args)
+        return self._command('log', *args)
 
 
-    def repo_log(self):
-        out = self._command('log', '--style="%s"' % os.path.join(DIR_TEMPLATES, 'log'))
+    def log(self, branch=None):
+        args = ['--style="%s"' % os.path.join(DIR_TEMPLATES, 'log')]
+        if branch:
+            args.append('--branch %s' % branch)
+        out = self._command('log', *args)
 
         log = defaultdict(list)
         for one in out.splitlines():
@@ -169,14 +172,11 @@ class Hg(DVCSWrapper):
         return log
 
     def user_commits(self, user, limit=None, **kwargs):
-        args = {'-u': user,
-                '--style': '"%s"' % os.path.join(DIR_TEMPLATES, 'log')
-        }
+        args = ['-u %s' % user, '--style "%s"' % os.path.join(DIR_TEMPLATES, 'log')]
         if limit:
-            args.update({'-l': str(limit)})
-        args.update(kwargs)
-        out = self.log(**args)
+            args.append('-l %s' % str(limit))
 
+        out = self._command('log', *args)
         for one in out.splitlines():
             branch, node, short, date, author, rev, mess, files = re.split(self.RE_SPLIT_LOG, one)
             files = [f for f in re.split(self.RE_SPLIT_TAB, files) if f]
@@ -232,7 +232,7 @@ class Hg(DVCSWrapper):
     def has_new_changesets(self, branch=None):
         ret = False
         try:
-            ret = bool(self._command('incoming', '-b %s' % branch if branch else ''))
+            ret = bool(self._command('incoming', '--branch %s' % branch if branch else ''))
         except DVCSException, e:
             if e.code != 1:
                 raise

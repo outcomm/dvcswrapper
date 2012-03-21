@@ -65,12 +65,9 @@ class DVCSWrapper(object):
         """
         raise NotImplementedError
 
-    def log(self, identifier=None, limit=None, template=None, **kwargs):
-        raise NotImplemented
-
-    def repo_log(self):
+    def log(self, branch=None):
         """
-        return {'branch':[dict(date,revhash,author,message)]}
+        return {'branch':[dict(date,revhash,author,message,files)]}
         """
         raise NotImplementedError
 

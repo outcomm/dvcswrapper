@@ -216,10 +216,13 @@ class HgTests(TestCase):
                    'modified': [], 'not_versioned': []}
         self.assertDictEqual(expects, hg.changed_between_nodes(0, 2))
 
-    def test_repo_log(self):
+    def test_log(self):
         hg = self._mk_local_repo()
-        log = hg.repo_log()
+        log = hg.log()
         self.assertEquals('690216eee7b291ac9dca0164d660576bdba51d47', log['default'][-1]['node'])
+        log = hg.log(branch='default')
+        self.assertEquals('690216eee7b291ac9dca0164d660576bdba51d47', log['default'][-1]['node'])
+
 
     def test_list_branches(self):
         hg = self._mk_local_repo()
