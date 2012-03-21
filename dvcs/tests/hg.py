@@ -9,9 +9,7 @@ except ImportError:
     import json
 
 TMP = tempfile.gettempdir()
-
 CURR_DIR = os.path.dirname(os.path.realpath(__file__))
-
 REMOTE_REPO = os.path.join(CURR_DIR, 'hgtestrepo')
 
 LOCAL_REPO = os.path.join(TMP, 'hgtests', 'local_clone')
@@ -53,19 +51,19 @@ class HgTests(TestCase):
         return hg
 
     def _mk_local_repo(self, to=DUMMY_REPO):
-        hg = DVCSWrapper(to)
+        hg = DVCSWrapper(to, vcs='mercurial.hg')
         hg.clone(remote_path=LOCAL_REPO)
         return hg
 
     def test_init(self):
-        self.assertFalse(DVCSWrapper(DUMMY_REPO).init_repo())
-        self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO).init_repo)
+        self.assertFalse(DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').init_repo())
+        self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').init_repo)
 
 
     def test_clone(self):
-        out = DVCSWrapper(DUMMY_REPO).clone(remote_path=LOCAL_REPO)
+        out = DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').clone(remote_path=LOCAL_REPO)
         self.assertTrue(out)
-        self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO).clone, remote_path=LOCAL_REPO)
+        self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').clone, remote_path=LOCAL_REPO)
 
 
     def test_add(self):
@@ -165,10 +163,10 @@ class HgTests(TestCase):
         self.assertDictEqual({'files': 0, 'changesets': 0, 'changes': 0}, hg.push())
 
         #copy the cloned repo
-        hg = DVCSWrapper(DUMMY_REPO_COPY)
+        hg = DVCSWrapper(DUMMY_REPO_COPY, vcs='mercurial.hg')
         hg.clone(DUMMY_REPO)
         #copy again the cloned repo
-        hg_copy = DVCSWrapper(DUMMY_REPO_COPY2)
+        hg_copy = DVCSWrapper(DUMMY_REPO_COPY2, vcs='mercurial.hg')
         hg_copy.clone(DUMMY_REPO_COPY)
 
         with open(os.path.join(DUMMY_REPO_COPY, TEST_FILE), 'a+') as f:
@@ -178,6 +176,8 @@ class HgTests(TestCase):
 
         self.assertDictEqual({'files': 1, 'changesets': 1, 'changes': 1}, hg_copy.pull())
         self.assertEquals({'files': 0, 'changesets': 0, 'changes': 0}, hg_copy.pull(branch='default'))
+        rmrf(DUMMY_REPO_COPY)
+        rmrf(DUMMY_REPO_COPY2)
 
 
     def test_status(self):
@@ -287,16 +287,8 @@ class HgTests(TestCase):
         self.assertEquals(expects, hg.get_changed_files(1, 5))
 
     def test_head(self):
+        #branch head
         hg = self._mk_local_repo()
-        #        expects = {'author': 'Jan Florian <starenka0@gmail.com>',
-        #                   'branch': 'default',
-        #                   'message': '',
-        #                   'node': '43ada45cd8365e0aef92b9a17fc581600f604f3a',
-        #                   'rev': '6',
-        #                   'short': '43ada45cd836'
-        #        }
-        #        self.assertEquals(expects, hg.get_head())
-
         expects = {'author': 'Jan Florian <starenka0@gmail.com>',
                    'branch': 'closed',
                    'message': '',
@@ -306,4 +298,14 @@ class HgTests(TestCase):
         }
         self.assertEquals(expects, hg.get_head(branch='closed'))
 
-        #@TODO tip test
+        #tip
+        hg = DVCSWrapper(DUMMY_REPO_COPY, vcs='mercurial.hg')
+        hg.init_repo()
+        new_file = os.path.join(DUMMY_REPO_COPY, TEST_FILE)
+        touch(new_file)
+        hg.commit('always look good. always!')
+        new_file = os.path.join(DUMMY_REPO_COPY, TEST_FILE + '2')
+        touch(new_file)
+        hg.commit('never look bad. never!')
+        tip = hg.get_head()
+        self.assertEquals(('default', '1'), (tip['branch'], tip['rev']))
