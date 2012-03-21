@@ -1,2 +1,0 @@
-changeset = "{node}:{files}\n"
-file = "{file}\t\t"

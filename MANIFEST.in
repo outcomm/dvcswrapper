@@ -1,2 +1,1 @@
 recursive-include dvcs/tests/hgtestrepo *
-recursive-include dvcs/mercurial/templates *

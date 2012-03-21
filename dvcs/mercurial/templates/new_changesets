@@ -1,1 +1,0 @@
-changeset = "{node}\t\t{date|isodatesec}\t\t{author}\t\t{desc}\n"

@@ -201,13 +201,15 @@ class HgTests(TestCase):
         hg = self._mk_local_repo()
         hg.update(revision=5)
         log = list(hg.user_commits('lahola', limit=1))
-        self.assertEquals([{'author': 'JUDr.PhDr.Mgr. et Mgr.Henryk Lahola',
+        self.assertEquals([{'author': u'JUDr.PhDr.Mgr. et Mgr.Henryk Lahola <JUDr.PhDr.Mgr. et Mgr.Henryk Lahola>',
                             'date': datetime.datetime(2012, 3, 2, 15, 59, 36),
-                            'files': ['buhwawa'],
-                            'mess': 'gos knows',
+                            'files': [],
+                            'mess': u'gos knows',
                             'node': 'bc841aa8bbb1cf6519670192857aeab484a48b56',
                             'rev': '5',
-                            'short': 'bc841aa8bbb1'}],
+                            'short': 'bc841aa8bbb1',
+                            'branch': 'default',
+                            }],
             log)
 
     def test_changed_between_nodes(self):
@@ -237,7 +239,8 @@ class HgTests(TestCase):
         revs = list(hg.branch_revisions('default'))
         self.assertEquals(
             dict(date=datetime.datetime(2012, 3, 2, 15, 49, 1), node='690216eee7b291ac9dca0164d660576bdba51d47',
-                author='Jan Florian <starenka0@gmail.com>', mess='first'), revs[-1])
+                author=u'Jan Florian <starenka0@gmail.com>', mess=u'first', branch='default', files=[], rev='0',
+                short='690216eee7b2'), revs[-1])
 
     def test_udiff(self):
         hg = self._mk_local_repo()
@@ -248,12 +251,6 @@ class HgTests(TestCase):
 @@ -1,1 +0,0 @@
 -dummy"""
         self.assertEquals(expects, hg.diff_unified('one', identifier='6:5'))
-
-    def test_htmldiff(self):
-        #hg = self._mk_local_repo()
-        #hg.update(revision=6)
-        #hg.diff_html('one', identifier='6:5')
-        assert False
 
     def test_has_new_changesets(self):
         hg = self._mk_local_repo()
@@ -276,28 +273,30 @@ class HgTests(TestCase):
         hg2 = self._mk_local_repo(DUMMY_REPO_COPY)
         hg.push()
         last = hg2.get_new_changesets()[-1]
-        self.assertEquals(('Always look good. Always!', 'brogrammer'), (last['mess'], last['author']))
+        self.assertEquals((u'Always look good. Always!', u'brogrammer <brogrammer>'), (last['mess'], last['author']))
 
 
     def test_files(self):
         hg = self._mk_local_repo()
         expects = [('e0059853920b7e0eafba0fcac22612b07045a359', []),
-            ('eda6840416571d21bcf3d37e9d519fafc3e7c31d', ['closed', 'meh']),
+            ('eda6840416571d21bcf3d37e9d519fafc3e7c31d', []),
             ('b26fba69aa7b0378bee2a5386f16c14b0f697c18', []),
             ('75465a736d415d8b3dbe64982635114fc39a6d37', []),
-            ('bc841aa8bbb1cf6519670192857aeab484a48b56', ['buhwawa'])]
+            ('bc841aa8bbb1cf6519670192857aeab484a48b56', [])]
 
         self.assertEquals(expects, hg.get_changed_files(1, 5))
 
     def test_head(self):
         #branch head
         hg = self._mk_local_repo()
-        expects = {'author': 'Jan Florian <starenka0@gmail.com>',
+        expects = {'author': u'Jan Florian <starenka0@gmail.com>',
                    'branch': 'closed',
-                   'message': '',
+                   'mess': u'closing',
                    'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18',
                    'rev': '3',
-                   'short': 'b26fba69aa7b'
+                   'short': 'b26fba69aa7b',
+                   'date': datetime.datetime(2012, 3, 2, 15, 50, 5),
+                   'files': []
         }
         self.assertEquals(expects, hg.get_head(branch='closed'))
 

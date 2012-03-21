@@ -1,5 +1,6 @@
 import re, os, datetime
 from collections import defaultdict
+from xml.etree import ElementTree
 
 from .. import utils
 from ..wrapper import DVCSWrapper, DVCSException
@@ -10,7 +11,6 @@ except ImportError:
     import settings
 
 DIR_SCRIPT = os.path.dirname(os.path.realpath(__file__))
-DIR_TEMPLATES = os.path.join(DIR_SCRIPT, 'templates')
 
 class Hg(DVCSWrapper):
     """
@@ -18,10 +18,6 @@ class Hg(DVCSWrapper):
     """
     RE_PUSH_PULL_OUT = re.compile(
         r'added (?P<changesets>\d+) changesets with (?P<changes>\d+) changes to (?P<files>\d+) files')
-    RE_HEAD = re.compile(
-        r'(?P<branch>.*?)\t\t(?P<rev>.*?)\t\t(?P<short>.*?)\t\t(?P<node>.*?)\t\t(?P<author>.*?)\t\t(?P<message>.*?)')
-    RE_SPLIT_LOG = re.compile(r'\t{2}')
-    RE_SPLIT_TAB = re.compile(r'\t{1}')
     NO_PUSH_PULL = {'files': 0, 'changesets': 0, 'changes': 0}
 
     #TODO rename ``use_repo_path``
@@ -40,7 +36,51 @@ class Hg(DVCSWrapper):
 
     def _parse_date(self, date):
         #@TODO fix TZs
-        return datetime.datetime.strptime(date[:-6], '%Y-%m-%d %H:%M:%S')
+        return datetime.datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S')
+
+    def _parse_log(self, xml):
+        tree = ElementTree.XML(xml)
+        as_list, as_dict = [], defaultdict(list)
+
+        for one in tree.findall('logentry'):
+            branch = one.find('branch')
+            item = dict(branch=branch.text if branch is not None else 'default', files=[], rev=one.attrib['revision'],
+                node=one.attrib['node'], short=one.attrib['node'][:12])
+
+            #@TODO + tags
+            for el in one:
+                if el.tag == 'branch':
+                    item['branch'] = el.text
+                elif el.tag == 'msg':
+                    item['mess'] = u'%s' % el.text
+                elif el.tag == 'author':
+                    item['author'] = u'%s <%s>' % (el.text, el.attrib['email'])
+                elif el.tag == 'date':
+                    item['date'] = self._parse_date(el.text)
+                elif el.tag == 'paths':
+                    item['files'] = [f.text for f in el.findall('path')]
+            as_list.append(item)
+            as_dict[item['branch']].append(item)
+        return as_list, as_dict
+
+    def _log(self, identifier=None, limit=None, template=None, **kwargs):
+        args = []
+        if identifier: args.extend(['-r', str(identifier)])
+        if limit: args.extend(['-l', str(limit)])
+        if template: args.extend(['--template', str(template)])
+        for k, v in kwargs.items():
+            args.extend([k, v])
+        return self._command('log', *args)
+
+    def _parse_push_pull_out(self, out):
+        search = re.search(self.RE_PUSH_PULL_OUT, out)
+        if search is None:
+            return self.NO_PUSH_PULL
+        counts = search.groupdict(self.NO_PUSH_PULL)
+        for k, v in counts.items():
+            counts[k] = int(v)
+        return counts
+
 
     def clone(self, remote_path):
         return self._command('clone', remote_path, self.repo_path, use_repo_path=False)
@@ -108,14 +148,6 @@ class Hg(DVCSWrapper):
             raise e
         return self._parse_push_pull_out(out)
 
-    def _parse_push_pull_out(self, out):
-        search = re.search(self.RE_PUSH_PULL_OUT, out)
-        if search is None:
-            return self.NO_PUSH_PULL
-        counts = search.groupdict(self.NO_PUSH_PULL)
-        for k, v in counts.items():
-            counts[k] = int(v)
-        return counts
 
     def update(self, branch=None, revision=None, clean=True, **kwargs):
         if revision and branch:
@@ -144,45 +176,20 @@ class Hg(DVCSWrapper):
             changes.setdefault(map[change], []).append(path)
         return changes
 
-
-    def _log(self, identifier=None, limit=None, template=None, **kwargs):
-        args = []
-        if identifier: args.extend(['-r', str(identifier)])
-        if limit: args.extend(['-l', str(limit)])
-        if template: args.extend(['--template', str(template)])
-        for k, v in kwargs.items():
-            args.extend([k, v])
-        return self._command('log', *args)
-
-
     def log(self, branch=None):
-        args = ['--style="%s"' % os.path.join(DIR_TEMPLATES, 'log')]
+        args = ['--style xml', '--verbose']
         if branch:
             args.append('--branch %s' % branch)
         out = self._command('log', *args)
-
-        log = defaultdict(list)
-        for one in out.splitlines():
-            branch, node, short, date, author, rev, mess, files = re.split(self.RE_SPLIT_LOG, one)
-            files = [f for f in re.split(self.RE_SPLIT_TAB, files) if f]
-            rev = dict(node=node, short=short, date=self._parse_date(date),
-                author=author, mess=mess, files=files, rev=rev
-            )
-            log[branch].append(rev)
-        return log
+        return self._parse_log(out)[1]
 
     def user_commits(self, user, limit=None, **kwargs):
-        args = ['-u %s' % user, '--style "%s"' % os.path.join(DIR_TEMPLATES, 'log')]
+        args = ['-u %s' % user, '--style xml']
         if limit:
             args.append('-l %s' % str(limit))
 
         out = self._command('log', *args)
-        for one in out.splitlines():
-            branch, node, short, date, author, rev, mess, files = re.split(self.RE_SPLIT_LOG, one)
-            files = [f for f in re.split(self.RE_SPLIT_TAB, files) if f]
-            yield dict(node=node, short=short, date=self._parse_date(date),
-                author=author, mess=mess, files=files, rev=rev
-            )
+        return self._parse_log(out)[0]
 
     def changed_between_nodes(self, start, end):
         return self.status(*['--rev', '%s:%s' % (str(start), str(end))])
@@ -207,11 +214,8 @@ class Hg(DVCSWrapper):
         return branches
 
     def branch_revisions(self, branch, **kwargs):
-        out = self._command('log', '-b %s' % branch, '--style "%s"' % os.path.join(DIR_TEMPLATES, 'revs'))
-        for one in out.splitlines():
-            node, short, date, author, files, rev, mess = re.split(self.RE_SPLIT_LOG, one)
-            yield dict(date=self._parse_date(date), node=node, author=author,
-                mess=mess)
+        out = self._command('log', '-b %s' % branch, '--style xml')
+        return self._parse_log(out)[0]
 
     def diff_unified(self, path, identifier=None, **kwargs):
         args = [os.path.join(self.repo_path, path)]
@@ -236,47 +240,32 @@ class Hg(DVCSWrapper):
         except DVCSException, e:
             if e.code != 1:
                 raise
-
         return ret
 
     def get_new_changesets(self, branch=None):
         revs = []
         try:
-            out = self._command('incoming', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'new_changesets'),
-                '-b %s' % branch if branch else '')
-            for one in out.splitlines()[2:]: #skip "comparing with" meh and "searching for changes"
-                node, date, author, mess = re.split(self.RE_SPLIT_LOG, one)
-                revs.append(
-                    dict(date=datetime.datetime.strptime(date[:-6], '%Y-%m-%d %H:%M:%S'), node=node, author=author,
-                        mess=mess))
+            out = self._command('incoming', '--style xml', '-b %s' % branch if branch else '')
+            return self._parse_log(''.join(out.splitlines()[2:]))[0]
         except DVCSException, e:
             if e.code != 1: #no changsets
                 raise
 
-        return revs
-
     def get_changed_files(self, start_node, end_node):
         try:
-            out = self._command('log', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'files_changed'),
-                '--rev %s:%s' % (start_node or '', end_node))
-            changed = []
-            for one in out.splitlines():
-                line = one.split(':')
-                node, files = line[0], ':'.join(line[1:])
-                changed.append((node, [f for f in re.split(self.RE_SPLIT_LOG, files) if f]))
-            return changed
+            out = self._command('log', '--style xml', '--rev %s:%s' % (start_node or '', end_node))
+            log = self._parse_log(out)[0]
+            return [(one['node'], one['files']) for one in log]
         except DVCSException:
             raise
 
     def get_head(self, branch=None):
-        args = ['log', '-l1', '--style "%s"' % os.path.join(DIR_TEMPLATES, 'head_tip')]
+        args = ['-l1', '--style xml']
         if branch:
             args.append('-b %s' % branch)
 
         try:
-            out = self._command(*args)
+            out = self._command('log', *args)
+            return self._parse_log(out)[0][0]
         except DVCSException:
             raise
-
-        search = re.search(self.RE_HEAD, out)
-        return search.groupdict()

@@ -1,2 +1,0 @@
-changeset = "{branch}\t\t{node}\t\t{node|short}\t\t{date|isodatesec}\t\t{author}\t\t{rev}\t\t{desc}\t\t{files}\n"
-file = "{file}\t"
