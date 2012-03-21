@@ -21,6 +21,7 @@ class Hg(DVCSWrapper):
     RE_HEAD = re.compile(
         r'(?P<branch>.*?)\t\t(?P<rev>.*?)\t\t(?P<short>.*?)\t\t(?P<node>.*?)\t\t(?P<author>.*?)\t\t(?P<message>.*?)')
     RE_SPLIT_LOG = re.compile(r'\t{2}')
+    RE_SPLIT_TAB = re.compile(r'\t{1}')
     NO_PUSH_PULL = {'files': 0, 'changesets': 0, 'changes': 0}
 
     #TODO rename ``use_repo_path``
@@ -36,6 +37,10 @@ class Hg(DVCSWrapper):
             command=command,
             args=' '.join(args))
         return utils.shell(cmd, ignore_return_code=kwargs.get('ignore_return_code', False))
+
+    def _parse_date(self, date):
+        #@TODO fix TZs
+        return datetime.datetime.strptime(date[:-6], '%Y-%m-%d %H:%M:%S')
 
     def clone(self, remote_path):
         return self._command('clone', remote_path, self.repo_path, use_repo_path=False)
@@ -155,9 +160,10 @@ class Hg(DVCSWrapper):
 
         log = defaultdict(list)
         for one in out.splitlines():
-            branch, node, short, date, author, files, rev, mess = re.split(self.RE_SPLIT_LOG, one)
-            rev = dict(node=node, short=short, date=datetime.datetime.strptime(date[:-6], '%Y-%m-%d %H:%M:%S'),
-                author=author, mess=mess
+            branch, node, short, date, author, rev, mess, files = re.split(self.RE_SPLIT_LOG, one)
+            files = [f for f in re.split(self.RE_SPLIT_TAB, files) if f]
+            rev = dict(node=node, short=short, date=self._parse_date(date),
+                author=author, mess=mess, files=files, rev=rev
             )
             log[branch].append(rev)
         return log
@@ -172,9 +178,10 @@ class Hg(DVCSWrapper):
         out = self.log(**args)
 
         for one in out.splitlines():
-            branch, node, short, date, author, files, rev, mess = re.split(self.RE_SPLIT_LOG, one)
-            yield dict(node=node, short=short, date=datetime.datetime.strptime(date[:-6], '%Y-%m-%d %H:%M:%S'),
-                author=author, mess=mess
+            branch, node, short, date, author, rev, mess, files = re.split(self.RE_SPLIT_LOG, one)
+            files = [f for f in re.split(self.RE_SPLIT_TAB, files) if f]
+            yield dict(node=node, short=short, date=self._parse_date(date),
+                author=author, mess=mess, files=files, rev=rev
             )
 
     def changed_between_nodes(self, start, end):
@@ -203,7 +210,7 @@ class Hg(DVCSWrapper):
         out = self._command('log', '-b %s' % branch, '--style "%s"' % os.path.join(DIR_TEMPLATES, 'revs'))
         for one in out.splitlines():
             node, short, date, author, files, rev, mess = re.split(self.RE_SPLIT_LOG, one)
-            yield dict(date=datetime.datetime.strptime(date[:-6], '%Y-%m-%d %H:%M:%S'), node=node, author=author,
+            yield dict(date=self._parse_date(date), node=node, author=author,
                 mess=mess)
 
     def diff_unified(self, path, identifier=None, **kwargs):

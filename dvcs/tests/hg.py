@@ -201,9 +201,13 @@ class HgTests(TestCase):
         hg = self._mk_local_repo()
         hg.update(revision=5)
         log = list(hg.user_commits('lahola', limit=1))
-        self.assertEquals([
-                {'mess': 'gos knows', 'date': datetime.datetime(2012, 3, 2, 15, 59, 36), 'short': 'bc841aa8bbb1',
-                 'node': 'bc841aa8bbb1cf6519670192857aeab484a48b56', 'author': 'JUDr.PhDr.Mgr. et Mgr.Henryk Lahola'}],
+        self.assertEquals([{'author': 'JUDr.PhDr.Mgr. et Mgr.Henryk Lahola',
+                            'date': datetime.datetime(2012, 3, 2, 15, 59, 36),
+                            'files': ['buhwawa'],
+                            'mess': 'gos knows',
+                            'node': 'bc841aa8bbb1cf6519670192857aeab484a48b56',
+                            'rev': '5',
+                            'short': 'bc841aa8bbb1'}],
             log)
 
     def test_changed_between_nodes(self):
@@ -211,9 +215,6 @@ class HgTests(TestCase):
         expects = {'added': ['closed', 'meh'], 'missing': [], 'removed': [],
                    'modified': [], 'not_versioned': []}
         self.assertDictEqual(expects, hg.changed_between_nodes(0, 2))
-
-    def test_log(self):
-        assert False
 
     def test_repo_log(self):
         hg = self._mk_local_repo()
@@ -304,3 +305,5 @@ class HgTests(TestCase):
                    'short': 'b26fba69aa7b'
         }
         self.assertEquals(expects, hg.get_head(branch='closed'))
+
+        #@TODO tip test
