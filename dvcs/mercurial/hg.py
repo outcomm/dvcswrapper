@@ -45,9 +45,8 @@ class Hg(DVCSWrapper):
         for one in tree.findall('logentry'):
             branch = one.find('branch')
             item = dict(branch=branch.text if branch is not None else 'default', files=[], rev=one.attrib['revision'],
-                node=one.attrib['node'], short=one.attrib['node'][:12])
+                node=one.attrib['node'], short=one.attrib['node'][:12], tags=[])
 
-            #@TODO + tags
             for el in one:
                 if el.tag == 'branch':
                     item['branch'] = el.text
@@ -59,18 +58,11 @@ class Hg(DVCSWrapper):
                     item['date'] = self._parse_date(el.text)
                 elif el.tag == 'paths':
                     item['files'] = [f.text for f in el.findall('path')]
+                elif el.tag == 'tag':
+                    item['tags'] = [el.text]
             as_list.append(item)
             as_dict[item['branch']].append(item)
         return as_list, as_dict
-
-    def _log(self, identifier=None, limit=None, template=None, **kwargs):
-        args = []
-        if identifier: args.extend(['-r', str(identifier)])
-        if limit: args.extend(['-l', str(limit)])
-        if template: args.extend(['--template', str(template)])
-        for k, v in kwargs.items():
-            args.extend([k, v])
-        return self._command('log', *args)
 
     def _parse_push_pull_out(self, out):
         search = re.search(self.RE_PUSH_PULL_OUT, out)
