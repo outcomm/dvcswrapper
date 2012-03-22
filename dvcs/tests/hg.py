@@ -55,18 +55,18 @@ class HgTests(TestCase):
         hg.clone(remote_path=LOCAL_REPO)
         return hg
 
-    def xtest_init(self):
+    def test_init(self):
         self.assertFalse(DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').init_repo())
         self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').init_repo)
 
 
-    def xtest_clone(self):
+    def test_clone(self):
         out = DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').clone(remote_path=LOCAL_REPO)
         self.assertTrue(out)
         self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').clone, remote_path=LOCAL_REPO)
 
 
-    def xtest_add(self):
+    def test_add(self):
         hg = self._init_repo(DUMMY_REPO)
         new_file = os.path.join(DUMMY_REPO, TEST_FILE)
         touch(new_file)
@@ -76,7 +76,7 @@ class HgTests(TestCase):
 
         self.assertRaises(DVCSException, hg.add, 'asd')
 
-    def xtest_commit(self):
+    def test_commit(self):
         hg = self._init_repo(DUMMY_REPO)
         new_file = os.path.join(DUMMY_REPO, TEST_FILE)
         touch(new_file)
@@ -88,23 +88,23 @@ class HgTests(TestCase):
         self.assertRaises(DVCSException, hg.commit, 'msg', files=['blah']) # file not there
         self.assertRaises(DVCSException, hg.commit, 'msg') # nothing added
 
-    def xtest_up(self):
+    def test_up(self):
         hg = self._init_repo(DUMMY_REPO)
         touch(os.path.join(DUMMY_REPO, TEST_FILE))
         hg.commit('msg')
         hg.update(revision=0)
         self.assertRaises(DVCSException, hg.update, revision=2000)
 
-    def xtest_branch(self):
+    def test_branch(self):
         hg = self._init_repo(DUMMY_REPO)
         self.assertTrue(hg.branch('test'))
 
-    def xtest_branch_name(self):
+    def test_branch_name(self):
         hg = self._init_repo(DUMMY_REPO)
         self.assertEqual(hg.branch(''), 'default')
 
 
-    def xtest_merge(self):
+    def test_merge(self):
         hg = self._init_repo(DUMMY_REPO)
         new_file = os.path.join(DUMMY_REPO, TEST_FILE)
         with open(new_file, "w") as f:
@@ -121,7 +121,7 @@ class HgTests(TestCase):
 
         self.assertEqual(2, len(open(new_file, "r").readlines()))
 
-    def xtest_conflict_merge(self):
+    def test_conflict_merge(self):
         hg = self._mk_local_repo()
 
         hg.branch('test')
@@ -158,7 +158,7 @@ class HgTests(TestCase):
             self.assertIsNotNone(merge['tar'])
 
 
-    def xtest_push_pull(self):
+    def test_push_pull(self):
         hg = self._mk_local_repo()
         self.assertDictEqual({'files': 0, 'changesets': 0, 'changes': 0}, hg.push())
 
@@ -180,7 +180,7 @@ class HgTests(TestCase):
         rmrf(DUMMY_REPO_COPY2)
 
 
-    def xtest_status(self):
+    def test_status(self):
         hg = self._mk_local_repo()
         st = hg.status()
         self.assertEqual({'added': [], 'missing': [], 'removed': [], 'modified': [], 'not_versioned': []}, st)
@@ -197,7 +197,7 @@ class HgTests(TestCase):
                 {'added': ['asd'], 'missing': [], 'removed': [], 'modified': [], 'not_versioned': ['test_file.txt']},
             st)
 
-    def xtest_user_commits(self):
+    def test_user_commits(self):
         hg = self._mk_local_repo()
         hg.update(revision=5)
         log = list(hg.user_commits('lahola', limit=1))
@@ -212,7 +212,7 @@ class HgTests(TestCase):
                             }],
             log)
 
-    def xtest_changed_between_nodes(self):
+    def test_changed_between_nodes(self):
         hg = self._mk_local_repo()
         expects = {'added': ['closed', 'meh'], 'missing': [], 'removed': [],
                    'modified': [], 'not_versioned': []}
@@ -231,7 +231,7 @@ class HgTests(TestCase):
         self.assertEquals(expects, hg.log(branch='closed', as_dict=False))
 
 
-    def xtest_list_branches(self):
+    def test_list_branches(self):
         hg = self._mk_local_repo()
         branches = hg.branches()
         self.assertEquals(sorted(['active', 'inactive', 'closed', 'all']), sorted(branches.keys()))
@@ -239,7 +239,7 @@ class HgTests(TestCase):
         self.assertTrue('closed' in branches['closed'])
         self.assertTrue('default' in branches['active'])
 
-    def xtest_branch_revisions(self):
+    def test_branch_revisions(self):
         hg = self._mk_local_repo()
         revs = list(hg.branch_revisions('default'))
         self.assertEquals(
@@ -247,7 +247,7 @@ class HgTests(TestCase):
                 author=u'Jan Florian <starenka0@gmail.com>', mess=u'first', branch='default', files=[], rev='0',
                 short='690216eee7b2'), revs[-1])
 
-    def xtest_udiff(self):
+    def test_udiff(self):
         hg = self._mk_local_repo()
         hg.update(revision=6)
         expects = """diff -r 43ada45cd836 -r bc841aa8bbb1 one
@@ -257,7 +257,7 @@ class HgTests(TestCase):
 -dummy"""
         self.assertEquals(expects, hg.diff_unified('one', identifier='6:5'))
 
-    def xtest_has_new_changesets(self):
+    def test_has_new_changesets(self):
         hg = self._mk_local_repo()
         self.assertFalse(hg.has_new_changesets())
 
@@ -268,7 +268,7 @@ class HgTests(TestCase):
         hg.push()
         self.assertTrue(hg2.has_new_changesets())
 
-    def xtest_get_new_changesets(self):
+    def test_get_new_changesets(self):
         hg = self._mk_local_repo()
         self.assertFalse(hg.get_new_changesets())
 
@@ -281,7 +281,7 @@ class HgTests(TestCase):
         self.assertEquals((u'Always look good. Always!', u'brogrammer <brogrammer>'), (last['mess'], last['author']))
 
 
-    def xtest_files(self):
+    def test_files(self):
         hg = self._mk_local_repo()
         expects = [('e0059853920b7e0eafba0fcac22612b07045a359', []),
             ('eda6840416571d21bcf3d37e9d519fafc3e7c31d', ['closed', 'meh']),
@@ -291,7 +291,7 @@ class HgTests(TestCase):
 
         self.assertEquals(expects, hg.get_changed_files(1, 5))
 
-    def xtest_head(self):
+    def test_head(self):
         #branch head
         hg = self._mk_local_repo()
         expects = {'author': u'Jan Florian <starenka0@gmail.com>',
