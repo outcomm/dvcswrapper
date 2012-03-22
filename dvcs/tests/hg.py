@@ -209,7 +209,8 @@ class HgTests(TestCase):
                             'rev': '5',
                             'short': 'bc841aa8bbb1',
                             'branch': 'default',
-                            }],
+                            'tags': []
+        }],
             log)
 
     def test_changed_between_nodes(self):
@@ -245,7 +246,7 @@ class HgTests(TestCase):
         self.assertEquals(
             dict(date=datetime.datetime(2012, 3, 2, 15, 49, 1), node='690216eee7b291ac9dca0164d660576bdba51d47',
                 author=u'Jan Florian <starenka0@gmail.com>', mess=u'first', branch='default', files=[], rev='0',
-                short='690216eee7b2'), revs[-1])
+                short='690216eee7b2', tags=[]), revs[-1])
 
     def test_udiff(self):
         hg = self._mk_local_repo()
@@ -301,7 +302,8 @@ class HgTests(TestCase):
                    'rev': '3',
                    'short': 'b26fba69aa7b',
                    'date': datetime.datetime(2012, 3, 2, 15, 50, 5),
-                   'files': []
+                   'files': [],
+                   'tags': []
         }
         self.assertEquals(expects, hg.get_head(branch='closed'))
 
