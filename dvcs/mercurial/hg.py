@@ -258,7 +258,7 @@ class Hg(DVCSWrapper):
 
     def get_changed_files(self, start_node, end_node):
         try:
-            out = self._command('log', '--style xml', '--rev %s:%s' % (start_node or '', end_node))
+            out = self._command('log', '--verbose', '--style xml', '--rev %s:%s' % (start_node or '', end_node))
             log = self._parse_log(out)[0]
             return [(one['node'], one['files']) for one in log]
         except DVCSException:
