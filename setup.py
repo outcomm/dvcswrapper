@@ -41,7 +41,7 @@ setup(name = 'dvcs',
     keywords = KEYWORDS,
     zip_safe = False,
     include_package_data = True,
-    install_requires = ['fabric<1.4.0','mercurial>=2.1.1',],
+    install_requires = ['fabric<1.4.0', 'mercurial>=2.1.1', 'python-dateutil==1.5'], #dateutil > 1.5 for py3k
     cmdclass={'install': install},
 )
 

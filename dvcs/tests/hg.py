@@ -1,6 +1,8 @@
-import os, tempfile, shutil, datetime
+import os, tempfile, shutil, datetime, re
 from unittest import TestCase
-import re
+
+from dateutil.parser import parse as dateutil_parse
+
 from ..wrapper import DVCSException, DVCSWrapper
 
 try:
@@ -202,7 +204,7 @@ class HgTests(TestCase):
         hg.update(revision=5)
         log = list(hg.user_commits('lahola', limit=1))
         self.assertEquals([{'author': u'JUDr.PhDr.Mgr. et Mgr.Henryk Lahola <JUDr.PhDr.Mgr. et Mgr.Henryk Lahola>',
-                            'date': datetime.datetime(2012, 3, 2, 15, 59, 36),
+                            'date': dateutil_parse('2012-03-02T15:59:36+0100'),
                             'files': [],
                             'mess': u'gos knows',
                             'node': 'bc841aa8bbb1cf6519670192857aeab484a48b56',
@@ -224,10 +226,10 @@ class HgTests(TestCase):
         log = hg.log(as_dict=False)
         self.assertEquals('690216eee7b291ac9dca0164d660576bdba51d47', log[-1]['node'])
         expects = [{'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18', 'files': [], 'short': 'b26fba69aa7b',
-                    'mess': u'closing', 'branch': 'closed', 'tags': [], 'date': datetime.datetime(2012, 3, 2, 15, 50, 5)
+                    'mess': u'closing', 'branch': 'closed', 'tags': [], 'date': dateutil_parse('2012-03-02T15:50:05+0100')
             , 'author': u'Jan Florian <starenka0@gmail.com>', 'rev': '3'},
                 {'node': 'eda6840416571d21bcf3d37e9d519fafc3e7c31d', 'files': ['closed', 'meh'], 'short': 'eda684041657'
-                , 'mess': u'uuu', 'branch': 'closed', 'tags': [], 'date': datetime.datetime(2012, 3, 2, 15, 49, 58),
+                , 'mess': u'uuu', 'branch': 'closed', 'tags': [], 'date': dateutil_parse('2012-03-02T15:49:58+0100'),
                  'author': u'Jan Florian <starenka0@gmail.com>', 'rev': '2'}]
         self.assertEquals(expects, hg.log(branch='closed', as_dict=False))
 
@@ -244,7 +246,7 @@ class HgTests(TestCase):
         hg = self._mk_local_repo()
         revs = list(hg.branch_revisions('default'))
         self.assertEquals(
-            dict(date=datetime.datetime(2012, 3, 2, 15, 49, 1), node='690216eee7b291ac9dca0164d660576bdba51d47',
+            dict(date=dateutil_parse('2012-03-02T15:49:01+0100'), node='690216eee7b291ac9dca0164d660576bdba51d47',
                 author=u'Jan Florian <starenka0@gmail.com>', mess=u'first', branch='default', files=[], rev='0',
                 short='690216eee7b2', tags=[]), revs[-1])
 
@@ -301,7 +303,7 @@ class HgTests(TestCase):
                    'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18',
                    'rev': '3',
                    'short': 'b26fba69aa7b',
-                   'date': datetime.datetime(2012, 3, 2, 15, 50, 5),
+                   'date': dateutil_parse('2012-03-02T15:50:05+0100'),
                    'files': [],
                    'tags': []
         }

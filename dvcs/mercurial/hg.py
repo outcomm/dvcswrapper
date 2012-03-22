@@ -2,6 +2,8 @@ import re, os, datetime
 from collections import defaultdict
 from xml.etree import ElementTree
 
+from dateutil.parser import parse as dateutil_parse
+
 from .. import utils
 from ..wrapper import DVCSWrapper, DVCSException
 
@@ -35,8 +37,7 @@ class Hg(DVCSWrapper):
         return utils.shell(cmd, ignore_return_code=kwargs.get('ignore_return_code', False))
 
     def _parse_date(self, date):
-        #@TODO fix TZs
-        return datetime.datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S')
+        return dateutil_parse(date)
 
     def _parse_log(self, xml):
         tree = ElementTree.XML(xml)
