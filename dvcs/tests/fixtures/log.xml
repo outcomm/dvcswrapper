@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<log>
+<logentry revision="0" node="e0829f634208c3d7005783822e92f6aec68924c9">
+<branch>foo</branch>
+<author email="foo@barcorp.cz">&quot;Baz Bazer</author>
+<date>2010-12-29T18:19:20+01:00</date>
+<msg xml:space="preserve">asci codec can't decode</msg>
+<paths>
+<path action="A">UserFiles/Image/Pen�ze, energie a potraviny pod kontrolou.jpg</path>
+</paths>
+</logentry>
+</log>
+

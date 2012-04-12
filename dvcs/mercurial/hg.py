@@ -1,4 +1,4 @@
-import re, os, datetime
+import re, os
 from collections import defaultdict
 from xml.etree import ElementTree
 
@@ -40,29 +40,33 @@ class Hg(DVCSWrapper):
         return dateutil_parse(date)
 
     def _parse_log(self, xml):
-        tree = ElementTree.XML(xml)
-        as_list, as_dict = [], defaultdict(list)
+        try:
+            tree = ElementTree.XML(xml)
+            as_list, as_dict = [], defaultdict(list)
 
-        for one in tree.findall('logentry'):
-            branch = one.find('branch')
-            item = dict(branch=branch.text if branch is not None else 'default', files=[], rev=one.attrib['revision'],
-                node=one.attrib['node'], short=one.attrib['node'][:12], tags=[])
+            for one in tree.findall('logentry'):
+                branch = one.find('branch')
+                item = dict(branch=branch.text if branch is not None else 'default', files=[],
+                    rev=one.attrib['revision'],
+                    node=one.attrib['node'], short=one.attrib['node'][:12], tags=[])
 
-            for el in one:
-                if el.tag == 'branch':
-                    item['branch'] = el.text
-                elif el.tag == 'msg':
-                    item['mess'] = u'%s' % el.text
-                elif el.tag == 'author':
-                    item['author'] = u'%s <%s>' % (el.text, el.attrib['email'])
-                elif el.tag == 'date':
-                    item['date'] = self._parse_date(el.text)
-                elif el.tag == 'paths':
-                    item['files'] = [f.text for f in el.findall('path')]
-                elif el.tag == 'tag':
-                    item['tags'] = [el.text]
-            as_list.append(item)
-            as_dict[item['branch']].append(item)
+                for el in one:
+                    if el.tag == 'branch':
+                        item['branch'] = el.text
+                    elif el.tag == 'msg':
+                        item['mess'] = u'%s' % el.text
+                    elif el.tag == 'author':
+                        item['author'] = u'%s <%s>' % (el.text, el.attrib['email'])
+                    elif el.tag == 'date':
+                        item['date'] = self._parse_date(el.text)
+                    elif el.tag == 'paths':
+                        item['files'] = [f.text for f in el.findall('path')]
+                    elif el.tag == 'tag':
+                        item['tags'] = [el.text]
+                as_list.append(item)
+                as_dict[item['branch']].append(item)
+        except Exception, e:
+            raise DVCSException('Log parsing failed: %s' % e)
         return as_list, as_dict
 
     def _parse_push_pull_out(self, out):

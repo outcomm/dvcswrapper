@@ -1,4 +1,4 @@
-import os, tempfile, shutil, datetime, re
+import os, tempfile, shutil, re, datetime
 from unittest import TestCase
 
 from dateutil.parser import parse as dateutil_parse
@@ -12,7 +12,8 @@ except ImportError:
 
 TMP = tempfile.gettempdir()
 CURR_DIR = os.path.dirname(os.path.realpath(__file__))
-REMOTE_REPO = os.path.join(CURR_DIR, 'hgtestrepo')
+FIXTURES_DIR = os.path.join(CURR_DIR, 'fixtures')
+REMOTE_REPO = os.path.join(FIXTURES_DIR, 'hgtestrepo')
 
 LOCAL_REPO = os.path.join(TMP, 'hgtests', 'local_clone')
 DUMMY_REPO = os.path.join(TMP, 'hgtests', 'dummy')
@@ -226,7 +227,8 @@ class HgTests(TestCase):
         log = hg.log(as_dict=False)
         self.assertEquals('690216eee7b291ac9dca0164d660576bdba51d47', log[-1]['node'])
         expects = [{'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18', 'files': [], 'short': 'b26fba69aa7b',
-                    'mess': u'closing', 'branch': 'closed', 'tags': [], 'date': dateutil_parse('2012-03-02T15:50:05+0100')
+                    'mess': u'closing', 'branch': 'closed', 'tags': [],
+                    'date': dateutil_parse('2012-03-02T15:50:05+0100')
             , 'author': u'Jan Florian <starenka0@gmail.com>', 'rev': '3'},
                 {'node': 'eda6840416571d21bcf3d37e9d519fafc3e7c31d', 'files': ['closed', 'meh'], 'short': 'eda684041657'
                 , 'mess': u'uuu', 'branch': 'closed', 'tags': [], 'date': dateutil_parse('2012-03-02T15:49:58+0100'),
@@ -320,3 +322,23 @@ class HgTests(TestCase):
         hg.commit('never look bad. never!')
         tip = hg.get_head()
         self.assertEquals(('default', '1'), (tip['branch'], tip['rev']))
+
+    def test_log_parse(self):
+        hg = DVCSWrapper('dummy', vcs='mercurial.hg')
+        expects = ([{'node': 'e0829f634208c3d7005783822e92f6aec68924c9',
+                     'files': [u'UserFiles/Image/Pen\ufffdze, energie a potraviny pod kontrolou.jpg'],
+                     'short': 'e0829f634208', 'mess': u"asci codec can't decode", 'branch': 'foo', 'tags': [],
+                     'date': dateutil_parse('2010-12-29T18:19:20+0100'), 'author': u'"Baz Bazer <foo@barcorp.cz>',
+                     'rev': '0'}],
+                       {'foo': [{'node': 'e0829f634208c3d7005783822e92f6aec68924c9',
+                                 'files': [u'UserFiles/Image/Pen\ufffdze, energie a potraviny pod kontrolou.jpg'],
+                                 'short': 'e0829f634208', 'mess': u"asci codec can't decode", 'branch': 'foo',
+                                 'tags': [],
+                                 'date': dateutil_parse('2010-12-29T18:19:20+0100'),
+                                 'author': u'"Baz Bazer <foo@barcorp.cz>',
+                                 'rev': '0'}]})
+
+        with open(os.path.join(FIXTURES_DIR, 'log.xml')) as log:
+            self.assertEquals(expects, hg._parse_log(log.read()))
+
+        self.assertRaises(DVCSException, hg._parse_log, '')
