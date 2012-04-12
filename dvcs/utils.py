@@ -20,7 +20,7 @@ def shell(cmd, capture=not settings.FABRIC_OUTPUT, ignore_return_code=False):
                     'stdout': getattr(out, 'stdout', '').decode('utf8')}
             raise DVCSException('Executing %(cmd)s failed %(code)d stderr: %(stderr)s stdout:%(stdout)s' % info,
                 **info)
-        return out.decode('utf8', errors='ignore')
+        return unicode(out, errors='ignore').decode('utf8', 'ignore')
 
 
 def touch(path):
