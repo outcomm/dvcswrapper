@@ -65,7 +65,7 @@ class DVCSWrapper(object):
         """
         raise NotImplementedError
 
-    def log(self, branch=None, as_dict=True):
+    def log(self, branch=None):
         """
         returns {'branch':[dict(date,revhash,author,message,files)]}
         """

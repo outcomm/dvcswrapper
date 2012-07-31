@@ -224,7 +224,7 @@ class HgTests(TestCase):
 
     def test_log(self):
         hg = self._mk_local_repo()
-        log = hg.log(as_dict=False)
+        log = hg.log()[0]
         self.assertEquals('690216eee7b291ac9dca0164d660576bdba51d47', log[-1]['node'])
         expects = [{'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18', 'files': [], 'short': 'b26fba69aa7b',
                     'mess': u'closing', 'branch': 'closed', 'tags': [],
@@ -233,7 +233,7 @@ class HgTests(TestCase):
                 {'node': 'eda6840416571d21bcf3d37e9d519fafc3e7c31d', 'files': ['closed', 'meh'], 'short': 'eda684041657'
                 , 'mess': u'uuu', 'branch': 'closed', 'tags': [], 'date': dateutil_parse('2012-03-02T15:49:58+0100'),
                  'author': u'Jan Florian <starenka0@gmail.com>', 'rev': '2'}]
-        self.assertEquals(expects, hg.log(branch='closed', as_dict=False))
+        self.assertEquals(expects, hg.log(branch='closed')[0])
 
 
     def test_list_branches(self):

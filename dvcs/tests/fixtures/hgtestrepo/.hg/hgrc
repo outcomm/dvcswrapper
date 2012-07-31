@@ -1,2 +1,2 @@
 [paths]
-default = ssh://chrootuser@esrv1.komunikacniagentura.cz//home/chrootuser/repos/hgtest
+default = ssh://outcomm@repo.wmm.cz//home/outcomm/repos/hgtest

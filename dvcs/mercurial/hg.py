@@ -173,17 +173,14 @@ class Hg(DVCSWrapper):
             changes.setdefault(map[change], []).append(path)
         return changes
 
-    def log(self, branch=None, as_dict=True):
+    def log(self, branch=None):
         args = ['--style xml', '--verbose']
         if branch:
             args.append('--branch %s' % branch)
         out = self._command('log', *args)
         log = self._parse_log(out)
 
-        if as_dict:
-            return log[1]
-        else:
-            return log[0]
+        return log
 
     def user_commits(self, user, limit=None, **kwargs):
         args = ['-u %s' % user, '--style xml']
