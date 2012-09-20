@@ -31,7 +31,7 @@ KEYWORDS = 'Set of DVCS wrappers (currently only hg)'
 
 
 setup(name = 'dvcs',
-    version = '1.0.1',
+    version = '1.0.2',
     description = """Set of DVCS wrappers (currently only hg)""",
     author = 'starenka, vlinhart',
     url = "https://github.com/outcomm/dvcswrapper",

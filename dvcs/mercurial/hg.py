@@ -24,12 +24,22 @@ class Hg(DVCSWrapper):
 
     #TODO rename ``use_repo_path``
     def _command(self, command, *args, **kwargs):
+        hg_binary = getattr(settings, 'HG_BINARY', 'hg')
+        '''
+            this allows to override default hg binary for certain commands. f.e if you need to log remote repo
+            HG_COMMANDS_WITH_OTHER_BINARY = ['log']
+            HG_OTHER_BINARY = 'ssh -C remote.server hg'
+        '''
+
+        if command in getattr(settings,'HG_COMMANDS_WITH_OTHER_BINARY', []):
+            hg_binary = getattr(settings,'HG_OTHER_BINARY', hg_binary)
+
         use_repo_path = kwargs.get('use_repo_path', True)
         repo_path = '-R %s' % self.repo_path if use_repo_path else ''
         config = getattr(settings, 'HG_CONFIG', '')
         cmd = '%(prepend)s %(hg_binary)s %(repo_path)s %(config)s %(command)s %(args)s' % dict(
             prepend=kwargs.get('prepend', ''),
-            hg_binary=getattr(settings, 'HG_BINARY', 'hg'),
+            hg_binary=hg_binary,
             repo_path=repo_path,
             config='--config %s' % config if config else '',
             command=command,
