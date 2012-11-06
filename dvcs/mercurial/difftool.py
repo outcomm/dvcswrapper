@@ -9,6 +9,7 @@ external program like this:
 """
 
 import sys, difflib
+
 from utils import read_file
 
 first = read_file(sys.argv[1])

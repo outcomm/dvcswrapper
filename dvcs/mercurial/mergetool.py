@@ -8,10 +8,10 @@
     "--config merge-tools.e.premerge=True",
 """
 
-from tempfile import mkstemp
 import sys
-from utils import read_file
+from tempfile import mkstemp
 
+from utils import read_file
 
 try:
     import simplejson as json

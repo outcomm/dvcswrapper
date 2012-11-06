@@ -4,8 +4,8 @@ from xml.etree import ElementTree
 
 from dateutil.parser import parse as dateutil_parse
 
-from .. import utils
-from ..wrapper import DVCSWrapper, DVCSException
+from dvcs import utils
+from dvcs.wrapper import DVCSWrapper, DVCSException
 
 try:
     from django.conf import settings
@@ -13,6 +13,7 @@ except ImportError:
     import settings
 
 DIR_SCRIPT = os.path.dirname(os.path.realpath(__file__))
+
 
 class Hg(DVCSWrapper):
     """
@@ -31,8 +32,8 @@ class Hg(DVCSWrapper):
             HG_OTHER_BINARY = 'ssh -C remote.server hg'
         '''
 
-        if command in getattr(settings,'HG_COMMANDS_WITH_OTHER_BINARY', []):
-            hg_binary = getattr(settings,'HG_OTHER_BINARY', hg_binary)
+        if command in getattr(settings, 'HG_COMMANDS_WITH_OTHER_BINARY', []):
+            hg_binary = getattr(settings, 'HG_OTHER_BINARY', hg_binary)
 
         use_repo_path = kwargs.get('use_repo_path', True)
         repo_path = '-R %s' % self.repo_path if use_repo_path else ''
@@ -205,22 +206,27 @@ class Hg(DVCSWrapper):
 
     def branches(self, **kwargs):
         out = self._command('branches', '-c')
-
-        branches = {'active': [], 'inactive': [], 'closed': [], 'all': []}
-        re_line = re.compile(r'\s+')
-        for line in out.splitlines():
-            line = re.split(re_line, line)
-            try:
-                status = line[2][1:-1]
-            except IndexError:
-                status = 'active'
-            branches[status].append(line[0])
-            branches['all'].append(line[0])
+        branches = self._parse_branches(out)
 
         #sort'em
         for k, v in branches.iteritems():
             branches[k] = sorted(v)
         return branches
+
+    def _parse_branches(self, out):
+        branches = {'active': [], 'inactive': [], 'closed': [], 'all': []}
+        re_line = re.compile(r'(?P<name>[\w0-9\-_ ]+)\s+(?P<head>[a-z:0-9]+)(\s+\((?P<status>.*?)\))?')
+        for line in out.splitlines():
+            match = re.match(re_line, line)
+            line = match.groupdict()
+            status = line['status'] or 'active'
+            name = line['name'].strip(' ')
+
+            branches[status].append(name)
+            branches['all'].append(name)
+
+        return branches
+
 
     def branch_revisions(self, branch, **kwargs):
         out = self._command('log', '-b %s' % branch, '--style xml')

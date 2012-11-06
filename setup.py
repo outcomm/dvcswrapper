@@ -31,7 +31,7 @@ KEYWORDS = 'Set of DVCS wrappers (currently only hg)'
 
 
 setup(name = 'dvcs',
-    version = '1.0.2',
+    version = '1.0.3',
     description = """Set of DVCS wrappers (currently only hg)""",
     author = 'starenka, vlinhart',
     url = "https://github.com/outcomm/dvcswrapper",
@@ -41,7 +41,7 @@ setup(name = 'dvcs',
     keywords = KEYWORDS,
     zip_safe = False,
     include_package_data = True,
-    install_requires = ['fabric<1.4.0', 'mercurial>=2.1.1', 'python-dateutil==1.5'], #dateutil > 1.5 for py3k
+    install_requires = ['fabric<1.4.0', 'mercurial<2.4', 'python-dateutil==1.5'], #dateutil > 1.5 for py3k
     cmdclass={'install': install},
 )
 
