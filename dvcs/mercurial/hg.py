@@ -147,7 +147,7 @@ class Hg(DVCSWrapper):
     def pull(self, branch=None, *args):
         if branch:
             args = list(args)
-            args.append('--branch "%s"' % branch)
+            args.append('--branch \'%s\'' % branch)
         try:
             out = self._command('pull', *args)
         except DVCSException, e:
@@ -187,7 +187,7 @@ class Hg(DVCSWrapper):
     def log(self, branch=None):
         args = ['--style xml', '--verbose']
         if branch:
-            args.append('--branch "%s"' % branch)
+            args.append('--branch \'%s\'' % branch)
         out = self._command('log', *args)
         log = self._parse_log(out)
 
@@ -229,7 +229,7 @@ class Hg(DVCSWrapper):
 
 
     def branch_revisions(self, branch, **kwargs):
-        out = self._command('log', '-b "%s"' % branch, '--style xml')
+        out = self._command('log', '-b \'%s\'' % branch, '--style xml')
         return self._parse_log(out)[0]
 
     def diff_unified(self, path, identifier=None, **kwargs):
@@ -251,7 +251,7 @@ class Hg(DVCSWrapper):
     def has_new_changesets(self, branch=None):
         ret = False
         try:
-            ret = bool(self._command('incoming', '--branch "%s"' % branch if branch else ''))
+            ret = bool(self._command('incoming', '--branch \'%s\'' % branch if branch else ''))
         except DVCSException, e:
             if e.code != 1:
                 raise
@@ -260,7 +260,7 @@ class Hg(DVCSWrapper):
     def get_new_changesets(self, branch=None):
         revs = []
         try:
-            out = self._command('incoming', '--style xml', '-b "%s"' % branch if branch else '')
+            out = self._command('incoming', '--style xml', '-b \'%s\'' % branch if branch else '')
             return self._parse_log(''.join(out.splitlines()[2:]))[0]
         except DVCSException, e:
             if e.code != 1: #no changsets
@@ -277,7 +277,7 @@ class Hg(DVCSWrapper):
     def get_head(self, branch=None):
         args = ['-l1', '--style xml']
         if branch:
-            args.append('-b "%s"' % branch)
+            args.append('-b \'%s\'' % branch)
 
         try:
             out = self._command('log', *args)
