@@ -249,8 +249,8 @@ class HgTests(TestCase):
         hg = self._mk_local_repo()
         expects = {'active': ['default', 'apache-proxy'],
                    'all': ['default', 'apache-proxy', 'venv_reloc_fix',
-                           'nginx-apache', 'django1.4 (beta)', 'evil with spaces'],
-                   'inactive': ['venv_reloc_fix', 'nginx-apache', 'evil with spaces'],
+                           'nginx-apache', 'django1.4 (beta)', 'evil with spaces and 1 digit and 1.0 float!'],
+                   'inactive': ['venv_reloc_fix', 'nginx-apache', 'evil with spaces and 1 digit and 1.0 float!'],
                    'closed': ['django1.4 (beta)']
         }
         fixture = '''default                     1076:4e83c24706b3
@@ -258,7 +258,7 @@ apache-proxy                1075:c591e65d993a
 venv_reloc_fix               997:6ca5ea735ba2 (inactive)
 nginx-apache                 864:5b7eb3f4328b (inactive)
 django1.4 (beta)                    545:a31471ca8461 (closed)
-evil with spaces 231:78c04536846d (inactive)
+evil with spaces and 1 digit and 1.0 float! 231:78c04536846d (inactive)
 '''
 
         self.assertDictEqual(expects, hg._parse_branches(fixture))
