@@ -215,7 +215,7 @@ class Hg(DVCSWrapper):
 
     def _parse_branches(self, out):
         branches = {'active': [], 'inactive': [], 'closed': [], 'all': []}
-        re_line = re.compile(r'(?P<name>[\w0-9\-_ ]+)\s+(?P<head>[a-z:0-9]+)(\s+\((?P<status>.*?)\))?')
+        re_line = re.compile(r'(?P<name>.*)\s+(?P<head>[a-z:0-9]+)(\s+\((?P<status>.*?)\))?')
         for line in out.splitlines():
             match = re.match(re_line, line)
             line = match.groupdict()

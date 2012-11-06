@@ -247,29 +247,17 @@ class HgTests(TestCase):
 
     def test_parse_branches(self):
         hg = self._mk_local_repo()
-        expects = {'active': ['default', 'apache-proxy', 'tailf', 'bulk_actions', 'rev_node'],
-                   'all': ['default', 'apache-proxy', 'tailf', 'bulk_actions', 'rev_node', 'venv_reloc_fix',
-                           'nginx-apache', 'staticlib', 'settings-parsing', 'cache', 'django14', 'dvcs-refaptor',
-                           'beaconpush-progressbar', 'beaconpush', 'cachehash', 'celery', 'evil with spaces'],
-                   'inactive': ['venv_reloc_fix', 'nginx-apache', 'staticlib', 'settings-parsing', 'cache',
-                                'dvcs-refaptor', 'beaconpush-progressbar', 'beaconpush', 'cachehash', 'celery',
-                                'evil with spaces'], 'closed': ['django14']}
+        expects = {'active': ['default', 'apache-proxy'],
+                   'all': ['default', 'apache-proxy', 'venv_reloc_fix',
+                           'nginx-apache', 'django1.4 (beta)', 'evil with spaces'],
+                   'inactive': ['venv_reloc_fix', 'nginx-apache', 'evil with spaces'],
+                   'closed': ['django1.4 (beta)']
+        }
         fixture = '''default                     1076:4e83c24706b3
 apache-proxy                1075:c591e65d993a
-tailf                        479:281b0dcc074c
-bulk_actions                 467:6c4de62647e6
-rev_node                     261:e5f43f105a4c
 venv_reloc_fix               997:6ca5ea735ba2 (inactive)
 nginx-apache                 864:5b7eb3f4328b (inactive)
-staticlib                    600:9ad381fcf8c5 (inactive)
-settings-parsing             580:e85d3ecff403 (inactive)
-cache                        551:30c21e5c4570 (inactive)
-django14                     545:a31471ca8461 (closed)
-dvcs-refaptor                494:c1e134d808ef (inactive)
-beaconpush-progressbar       483:be99a184ed84 (inactive)
-beaconpush                   441:65f7f6030681 (inactive)
-cachehash                    362:fbe11a0e9c78 (inactive)
-celery                       231:78c04536846d (inactive)
+django1.4 (beta)                    545:a31471ca8461 (closed)
 evil with spaces 231:78c04536846d (inactive)
 '''
 
