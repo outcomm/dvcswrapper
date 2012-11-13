@@ -218,7 +218,8 @@ class Hg(DVCSWrapper):
         return as_list, as_dict
 
 
-    def log(self, branch=None, backend=settings.HG_LOG_BACKEND):
+    def log(self, branch=None, backend=None):
+        backend = backend  or getattr(settings, 'HG_LOG_BACKEND', 'api')
         if backend == 'api':
             return self.log_api(branch=branch)
         else:
