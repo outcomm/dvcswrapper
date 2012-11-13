@@ -54,19 +54,19 @@ class HgTests(TestCase):
         return hg
 
     def _mk_local_repo(self, to=DUMMY_REPO):
-        hg = DVCSWrapper(to, vcs='mercurial.hg')
+        hg = DVCSWrapper(to, vcs='hg')
         hg.clone(remote_path=LOCAL_REPO)
         return hg
 
     def test_init(self):
-        self.assertFalse(DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').init_repo())
-        self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').init_repo)
+        self.assertFalse(DVCSWrapper(DUMMY_REPO, vcs='hg').init_repo())
+        self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO, vcs='hg').init_repo)
 
 
     def test_clone(self):
-        out = DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').clone(remote_path=LOCAL_REPO)
+        out = DVCSWrapper(DUMMY_REPO, vcs='hg').clone(remote_path=LOCAL_REPO)
         self.assertTrue(out)
-        self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO, vcs='mercurial.hg').clone, remote_path=LOCAL_REPO)
+        self.assertRaises(DVCSException, DVCSWrapper(DUMMY_REPO, vcs='hg').clone, remote_path=LOCAL_REPO)
 
 
     def test_add(self):
@@ -166,10 +166,10 @@ class HgTests(TestCase):
         self.assertDictEqual({'files': 0, 'changesets': 0, 'changes': 0}, hg.push())
 
         #copy the cloned repo
-        hg = DVCSWrapper(DUMMY_REPO_COPY, vcs='mercurial.hg')
+        hg = DVCSWrapper(DUMMY_REPO_COPY, vcs='hg')
         hg.clone(DUMMY_REPO)
         #copy again the cloned repo
-        hg_copy = DVCSWrapper(DUMMY_REPO_COPY2, vcs='mercurial.hg')
+        hg_copy = DVCSWrapper(DUMMY_REPO_COPY2, vcs='hg')
         hg_copy.clone(DUMMY_REPO_COPY)
 
         with open(os.path.join(DUMMY_REPO_COPY, TEST_FILE), 'a+') as f:
@@ -209,9 +209,9 @@ class HgTests(TestCase):
                             'files': [],
                             'mess': u'gos knows',
                             'node': 'bc841aa8bbb1cf6519670192857aeab484a48b56',
-                            'rev': '5',
+                            'rev': 5,
                             'short': 'bc841aa8bbb1',
-                            'branch': 'default',
+                            'branch': u'default',
                             'tags': []
         }],
             log)
@@ -222,18 +222,31 @@ class HgTests(TestCase):
                    'modified': [], 'not_versioned': []}
         self.assertDictEqual(expects, hg.changed_between_nodes(0, 2))
 
-    def test_log(self):
+    def test_log_api(self):
         hg = self._mk_local_repo()
-        log = hg.log()[0]
+        log = hg.log(backend='api')[0]
         self.assertEquals('690216eee7b291ac9dca0164d660576bdba51d47', log[-1]['node'])
         expects = [{'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18', 'files': [], 'short': 'b26fba69aa7b',
-                    'mess': u'closing', 'branch': 'closed', 'tags': [],
+                    'mess': u'closing', 'branch': u'closed', 'tags': [],
                     'date': dateutil_parse('2012-03-02T15:50:05+0100')
-            , 'author': u'Jan Florian <starenka0@gmail.com>', 'rev': '3'},
+            , 'author': u'Jan Florian <starenka0@gmail.com>', 'rev': 3},
                 {'node': 'eda6840416571d21bcf3d37e9d519fafc3e7c31d', 'files': ['closed', 'meh'], 'short': 'eda684041657'
-                , 'mess': u'uuu', 'branch': 'closed', 'tags': [], 'date': dateutil_parse('2012-03-02T15:49:58+0100'),
-                 'author': u'Jan Florian <starenka0@gmail.com>', 'rev': '2'}]
-        self.assertEquals(expects, hg.log(branch='closed')[0])
+                , 'mess': u'uuu', 'branch': u'closed', 'tags': [], 'date': dateutil_parse('2012-03-02T15:49:58+0100'),
+                 'author': u'Jan Florian <starenka0@gmail.com>', 'rev': 2}]
+        self.assertEquals(expects, hg.log(branch='closed', backend='api')[0])
+
+    def test_log_xml(self):
+        hg = self._mk_local_repo()
+        log = hg.log(backend='xml')[0]
+        self.assertEquals('690216eee7b291ac9dca0164d660576bdba51d47', log[-1]['node'])
+        expects = [{'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18', 'files': [], 'short': 'b26fba69aa7b',
+                    'mess': u'closing', 'branch': u'closed', 'tags': [],
+                    'date': dateutil_parse('2012-03-02T15:50:05+0100')
+            , 'author': u'Jan Florian <starenka0@gmail.com>', 'rev': 3},
+                {'node': 'eda6840416571d21bcf3d37e9d519fafc3e7c31d', 'files': ['closed', 'meh'], 'short': 'eda684041657'
+                , 'mess': u'uuu', 'branch': u'closed', 'tags': [], 'date': dateutil_parse('2012-03-02T15:49:58+0100'),
+                 'author': u'Jan Florian <starenka0@gmail.com>', 'rev': 2}]
+        self.assertEquals(expects, hg.log(branch='closed', backend='xml')[0])
 
 
     def test_list_branches(self):
@@ -268,7 +281,7 @@ evil with spaces and 1 digit and 1.0 float! 231:78c04536846d (inactive)
         revs = list(hg.branch_revisions('default'))
         self.assertEquals(
             dict(date=dateutil_parse('2012-03-02T15:49:01+0100'), node='690216eee7b291ac9dca0164d660576bdba51d47',
-                author=u'Jan Florian <starenka0@gmail.com>', mess=u'first', branch='default', files=[], rev='0',
+                author=u'Jan Florian <starenka0@gmail.com>', mess=u'first', branch=u'default', files=[], rev=0,
                 short='690216eee7b2', tags=[]), revs[-1])
 
     def test_udiff(self):
@@ -319,10 +332,10 @@ evil with spaces and 1 digit and 1.0 float! 231:78c04536846d (inactive)
         #branch head
         hg = self._mk_local_repo()
         expects = {'author': u'Jan Florian <starenka0@gmail.com>',
-                   'branch': 'closed',
+                   'branch': u'closed',
                    'mess': u'closing',
                    'node': 'b26fba69aa7b0378bee2a5386f16c14b0f697c18',
-                   'rev': '3',
+                   'rev': 3,
                    'short': 'b26fba69aa7b',
                    'date': dateutil_parse('2012-03-02T15:50:05+0100'),
                    'files': [],
@@ -331,7 +344,7 @@ evil with spaces and 1 digit and 1.0 float! 231:78c04536846d (inactive)
         self.assertEquals(expects, hg.get_head(branch='closed'))
 
         #tip
-        hg = DVCSWrapper(DUMMY_REPO_COPY, vcs='mercurial.hg')
+        hg = DVCSWrapper(DUMMY_REPO_COPY, vcs='hg')
         hg.init_repo()
         new_file = os.path.join(DUMMY_REPO_COPY, TEST_FILE)
         touch(new_file)
@@ -340,22 +353,22 @@ evil with spaces and 1 digit and 1.0 float! 231:78c04536846d (inactive)
         touch(new_file)
         hg.commit('never look bad. never!')
         tip = hg.get_head()
-        self.assertEquals(('default', '1'), (tip['branch'], tip['rev']))
+        self.assertEquals((u'default', 1), (tip['branch'], tip['rev']))
 
     def test_log_parse(self):
-        hg = DVCSWrapper('dummy', vcs='mercurial.hg')
+        hg = DVCSWrapper('dummy', vcs='hg')
         expects = ([{'node': 'e0829f634208c3d7005783822e92f6aec68924c9',
                      'files': [u'UserFiles/Image/Pen\ufffdze, energie a potraviny pod kontrolou.jpg'],
-                     'short': 'e0829f634208', 'mess': u"asci codec can't decode", 'branch': 'foo', 'tags': [],
+                     'short': 'e0829f634208', 'mess': u"asci codec can't decode", 'branch': u'foo', 'tags': [],
                      'date': dateutil_parse('2010-12-29T18:19:20+0100'), 'author': u'"Baz Bazer <foo@barcorp.cz>',
-                     'rev': '0'}],
+                     'rev': 0}],
                        {'foo': [{'node': 'e0829f634208c3d7005783822e92f6aec68924c9',
                                  'files': [u'UserFiles/Image/Pen\ufffdze, energie a potraviny pod kontrolou.jpg'],
-                                 'short': 'e0829f634208', 'mess': u"asci codec can't decode", 'branch': 'foo',
+                                 'short': 'e0829f634208', 'mess': u"asci codec can't decode", 'branch': u'foo',
                                  'tags': [],
                                  'date': dateutil_parse('2010-12-29T18:19:20+0100'),
                                  'author': u'"Baz Bazer <foo@barcorp.cz>',
-                                 'rev': '0'}]})
+                                 'rev': 0}]})
 
         with open(os.path.join(FIXTURES_DIR, 'log.xml')) as log:
             self.assertEquals(expects, hg._parse_log(log.read()))

@@ -3,6 +3,8 @@ from collections import defaultdict
 from xml.etree import ElementTree
 
 from dateutil.parser import parse as dateutil_parse
+from mercurial import hg, ui
+from mercurial.util import datestr
 
 from dvcs import utils
 from dvcs.wrapper import DVCSWrapper, DVCSException
@@ -10,7 +12,7 @@ from dvcs.wrapper import DVCSWrapper, DVCSException
 try:
     from django.conf import settings
 except ImportError:
-    import settings
+    import dvcs.settings as settings
 
 DIR_SCRIPT = os.path.dirname(os.path.realpath(__file__))
 
@@ -57,17 +59,17 @@ class Hg(DVCSWrapper):
 
             for one in tree.findall('logentry'):
                 branch = one.find('branch')
-                item = dict(branch=branch.text if branch is not None else 'default', files=[],
-                    rev=one.attrib['revision'],
+                item = dict(branch=unicode(branch.text) if branch is not None else u'default', files=[],
+                    rev=int(one.attrib['revision']),
                     node=one.attrib['node'], short=one.attrib['node'][:12], tags=[])
 
                 for el in one:
                     if el.tag == 'branch':
-                        item['branch'] = el.text
+                        item['branch'] = unicode(el.text)
                     elif el.tag == 'msg':
-                        item['mess'] = u'%s' % el.text
+                        item['mess'] = unicode(el.text)
                     elif el.tag == 'author':
-                        item['author'] = u'%s <%s>' % (el.text, el.attrib['email'])
+                        item['author'] = unicode('%s <%s>' % (el.text, el.attrib['email']))
                     elif el.tag == 'date':
                         item['date'] = self._parse_date(el.text)
                     elif el.tag == 'paths':
@@ -184,7 +186,7 @@ class Hg(DVCSWrapper):
             changes.setdefault(map[change], []).append(path)
         return changes
 
-    def log(self, branch=None):
+    def log_xml(self, branch=None):
         args = ['--style xml', '--verbose']
         if branch:
             args.append('--branch \'%s\'' % branch)
@@ -192,6 +194,35 @@ class Hg(DVCSWrapper):
         log = self._parse_log(out)
 
         return log
+
+    def log_api(self, branch=None):
+        repo = hg.repository(ui.ui(), self.repo_path)
+        as_list, as_dict = [], {}
+
+        for rev in repo:
+            rev_obj = repo[rev]
+            branch_ = rev_obj.branch()
+            if branch and branch != branch_:
+                continue
+
+            node = rev_obj.hex()
+            date = self._parse_date(datestr(rev_obj.date()))
+            one = dict(branch=branch_, mess=rev_obj.description(), author=rev_obj.user(),
+                date=date, files=rev_obj.files(), tags=rev_obj.tags(),
+                rev=rev, node=node, short=node[:12]
+            )
+
+            as_list.insert(0, one)
+            as_dict[branch_] = one
+
+        return as_list, as_dict
+
+
+    def log(self, branch=None, backend=settings.HG_LOG_BACKEND):
+        if backend == 'api':
+            return self.log_api(branch=branch)
+        else:
+            return self.log_xml(branch=branch)
 
     def user_commits(self, user, limit=None, **kwargs):
         args = ['-u %s' % user, '--style xml']

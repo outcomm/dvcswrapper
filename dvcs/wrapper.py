@@ -13,15 +13,15 @@ class DVCSException(Exception):
 
 
 class DVCSWrapper(object):
-    def __init__(self, repo_path, vcs='mercurial.hg'):
+    def __init__(self, repo_path, vcs='hg'):
         """
             factory for sublclasses, loads classes dynamically
             from vcs.vcs.Vcs
         """
         self.repo_path = repo_path
         try:
-            klass = vcs.split('.')[1].capitalize()
-            module = __import__(vcs, globals(), locals(), fromlist=[klass])
+            klass = vcs.capitalize()
+            module = __import__('dvcs.%s.wrapper' % vcs, globals(), locals(), fromlist=[klass])
             self.__class__ = getattr(module, klass)
         except:
             raise
@@ -65,7 +65,7 @@ class DVCSWrapper(object):
         """
         raise NotImplementedError
 
-    def log(self, branch=None):
+    def log(self, branch=None, **kwargs):
         """
         returns {'branch':[dict(date,revhash,author,message,files)]}
         """

@@ -4,7 +4,7 @@ from setuptools.command.install import install as _install
 import os
 import stat
 
-EXECUTABLE_FILES=('dvcs/mercurial/mergetool.py', 'dvcs/mercurial/difftool.py')
+EXECUTABLE_FILES=('dvcs/hg/mergetool.py', 'dvcs/hg/difftool.py')
 
 class install(_install):
     def run(self):
@@ -31,7 +31,7 @@ KEYWORDS = 'Set of DVCS wrappers (currently only hg)'
 
 
 setup(name = 'dvcs',
-    version = '1.0.3',
+    version = '1.0.4',
     description = """Set of DVCS wrappers (currently only hg)""",
     author = 'starenka, vlinhart',
     url = "https://github.com/outcomm/dvcswrapper",
@@ -41,7 +41,7 @@ setup(name = 'dvcs',
     keywords = KEYWORDS,
     zip_safe = False,
     include_package_data = True,
-    install_requires = ['fabric<1.4.0', 'mercurial<2.4', 'python-dateutil==1.5'], #dateutil > 1.5 for py3k
+    install_requires = ['fabric<1.4.0', 'mercurial<2.5', 'python-dateutil==1.5'], #dateutil > 1.5 for py3k
     cmdclass={'install': install},
 )
 
