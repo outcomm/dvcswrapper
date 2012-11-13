@@ -80,7 +80,7 @@ class Hg(DVCSWrapper):
                 as_dict[item['branch']].append(item)
         except Exception, e:
             raise DVCSException('Log parsing failed: %s' % e)
-        return as_list, as_dict
+        return as_list, dict(as_dict)
 
     def _parse_push_pull_out(self, out):
         search = re.search(self.RE_PUSH_PULL_OUT, out)
@@ -197,7 +197,7 @@ class Hg(DVCSWrapper):
 
     def log_api(self, branch=None):
         repo = hg.repository(ui.ui(), self.repo_path)
-        as_list, as_dict = [], {}
+        as_list, as_dict = [], defaultdict(list)
 
         for rev in repo:
             rev_obj = repo[rev]
@@ -213,9 +213,9 @@ class Hg(DVCSWrapper):
             )
 
             as_list.insert(0, one)
-            as_dict[branch_] = one
+            as_dict[branch_].insert(0, one)
 
-        return as_list, as_dict
+        return as_list, dict(as_dict)
 
 
     def log(self, branch=None, backend=None):
