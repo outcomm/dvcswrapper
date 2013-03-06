@@ -60,8 +60,8 @@ class Hg(DVCSWrapper):
             for one in tree.findall('logentry'):
                 branch = one.find('branch')
                 item = dict(branch=unicode(branch.text) if branch is not None else u'default', files=[],
-                    rev=int(one.attrib['revision']),
-                    node=one.attrib['node'], short=one.attrib['node'][:12], tags=[])
+                            rev=int(one.attrib['revision']),
+                            node=one.attrib['node'], short=one.attrib['node'][:12], tags=[])
 
                 for el in one:
                     if el.tag == 'branch':
@@ -126,7 +126,7 @@ class Hg(DVCSWrapper):
                 "--config merge-tools.e.premerge=True",
                 "--noninteractive",
                 "--preview" if kwargs.get('preview', False) else '',
-                ]
+        ]
 
         return self._command('merge', *args)
 
@@ -137,7 +137,7 @@ class Hg(DVCSWrapper):
         """
         try:
             out = self._command('push',
-                '--new-branch' if kwargs.get('new_branch', False) else ''
+                                '--new-branch' if kwargs.get('new_branch', False) else ''
             )
         except DVCSException, e:
             if e.code == 1 and 'no changes found' in e.stdout:
@@ -165,7 +165,7 @@ class Hg(DVCSWrapper):
         args = ['%s' % branch if branch else '',
                 '%s' % '--rev %s' % revision if revision else '',
                 '-C' if clean else '',
-                ]
+        ]
         return self._command('update', *args)
 
 
@@ -196,6 +196,14 @@ class Hg(DVCSWrapper):
         return log
 
     def log_api(self, branch=None):
+        def enc(string):
+            try:
+                for e in ('utf8', 'latin1', 'windows-1250', 'windows-1252'):
+                    return string.decode(e)
+            except UnicodeError:
+                return string.decode('ascii', 'ignore')
+
+
         repo = hg.repository(ui.ui(), self.repo_path)
         as_list, as_dict = [], defaultdict(list)
 
@@ -208,8 +216,8 @@ class Hg(DVCSWrapper):
             node = rev_obj.hex()
             date = self._parse_date(datestr(rev_obj.date()))
             one = dict(branch=branch_, mess=rev_obj.description(), author=rev_obj.user(),
-                date=date, files=rev_obj.files(), tags=rev_obj.tags(),
-                rev=rev, node=node, short=node[:12]
+                       date=date, files=map(enc, rev_obj.files()), tags=rev_obj.tags(),
+                       rev=rev, node=node, short=node[:12]
             )
 
             as_list.insert(0, one)
@@ -219,7 +227,7 @@ class Hg(DVCSWrapper):
 
 
     def log(self, branch=None, backend=None):
-        backend = backend  or getattr(settings, 'HG_LOG_BACKEND', 'api')
+        backend = backend or getattr(settings, 'HG_LOG_BACKEND', 'api')
         if backend == 'api':
             return self.log_api(branch=branch)
         else:
