@@ -252,10 +252,12 @@ class HgTests(TestCase):
     def test_list_branches(self):
         hg = self._mk_local_repo()
         branches = hg.branches()
-        self.assertEquals(sorted(['active', 'inactive', 'closed', 'all']), sorted(branches.keys()))
+        self.assertEquals(sorted(['active', 'inactive', 'closed', 'all', 'opened']), sorted(branches.keys()))
         self.assertTrue('inactive' in branches['inactive'])
         self.assertTrue('closed' in branches['closed'])
         self.assertTrue('default' in branches['active'])
+        self.assertTrue('default' in branches['opened'])
+        self.assertTrue('inactive' in branches['opened'])
 
 
     def test_parse_branches(self):
@@ -264,7 +266,8 @@ class HgTests(TestCase):
                    'all': ['default', 'apache-proxy', 'venv_reloc_fix',
                            'nginx-apache', 'django1.4 (beta)', 'evil with spaces and 1 digit and 1.0 float!'],
                    'inactive': ['venv_reloc_fix', 'nginx-apache', 'evil with spaces and 1 digit and 1.0 float!'],
-                   'closed': ['django1.4 (beta)']
+                   'closed': ['django1.4 (beta)'],
+                   'opened': ['default', 'apache-proxy', 'venv_reloc_fix', 'nginx-apache', 'evil with spaces and 1 digit and 1.0 float!'],
         }
         fixture = '''default                     1076:4e83c24706b3
 apache-proxy                1075:c591e65d993a

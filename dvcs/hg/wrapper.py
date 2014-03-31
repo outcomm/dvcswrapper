@@ -254,7 +254,7 @@ class Hg(DVCSWrapper):
         return branches
 
     def _parse_branches(self, out):
-        branches = {'active': [], 'inactive': [], 'closed': [], 'all': []}
+        branches = {'active': [], 'inactive': [], 'closed': [], 'all': [], 'opened':[]}
         re_line = re.compile(r'(?P<name>.*)\s+(?P<head>[a-z:0-9]+)(\s+\((?P<status>.*?)\))?')
         for line in out.splitlines():
             match = re.match(re_line, line)
@@ -264,6 +264,9 @@ class Hg(DVCSWrapper):
 
             branches[status].append(name)
             branches['all'].append(name)
+            if status in ('active', 'inactive'):
+                branches['opened'].append(name)
+
 
         return branches
 
